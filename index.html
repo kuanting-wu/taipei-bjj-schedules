@@ -341,7 +341,7 @@ function expandTimes(time) {
     return [{ start: s, end: e }];
   }
   if (t.includes("／") || t.includes("/")) {
-    return t.split(/[／/]/map(x => x.trim()).map(parseHM).filter(x => x != null)
+    return t.split(/\uFF0F|\//).map(x => x.trim()).map(parseHM).filter(x => x != null)
       .map(s => ({ start: s, end: s + 60 }));
   }
   if (t.includes("·")) {
