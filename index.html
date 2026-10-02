@@ -308,6 +308,40 @@
     color: var(--text); display: flex; align-items: baseline; gap: .5rem;
   }
   .align-day-band > h3 .band-meta { font-size: .75rem; font-weight: 500; color: var(--muted); }
+
+  /* thin / overlay scrollbars for schedule views */
+  .matrix-wrap, .align-wrap, .heat-wrap,
+  #appLayout.layout-stats-right .slot-stats > details.panel[open] > .panel-body.stats-body {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148,163,184,.35) transparent;
+  }
+  .matrix-wrap::-webkit-scrollbar,
+  .align-wrap::-webkit-scrollbar,
+  .heat-wrap::-webkit-scrollbar,
+  #appLayout.layout-stats-right .slot-stats > details.panel[open] > .panel-body.stats-body::-webkit-scrollbar {
+    width: 6px; height: 6px;
+  }
+  .matrix-wrap::-webkit-scrollbar-track,
+  .align-wrap::-webkit-scrollbar-track,
+  .heat-wrap::-webkit-scrollbar-track,
+  #appLayout.layout-stats-right .slot-stats > details.panel[open] > .panel-body.stats-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .matrix-wrap::-webkit-scrollbar-thumb,
+  .align-wrap::-webkit-scrollbar-thumb,
+  .heat-wrap::-webkit-scrollbar-thumb,
+  #appLayout.layout-stats-right .slot-stats > details.panel[open] > .panel-body.stats-body::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,.35); border-radius: 999px;
+    border: 1px solid transparent; background-clip: padding-box;
+  }
+  .matrix-wrap::-webkit-scrollbar-thumb:hover,
+  .align-wrap::-webkit-scrollbar-thumb:hover,
+  .heat-wrap::-webkit-scrollbar-thumb:hover {
+    background: rgba(167,139,250,.55);
+  }
+  .matrix-wrap::-webkit-scrollbar-corner,
+  .align-wrap::-webkit-scrollbar-corner { background: transparent; }
+
   .align-wrap {
     overflow: auto; -webkit-overflow-scrolling: touch;
     border: 1px solid var(--border); border-radius: 12px; background: #0f1419;
@@ -827,44 +861,44 @@ const DAYS = ["一","二","三","四","五","六","日"];
 const GYMS = [
   { id:"taiwannogi", name:"Taiwanogi", district:"大安", address:"台北市大安區延吉街131巷1弄26號B1", lat:25.043564, lng:121.554514, km:0.0, mrt:"忠孝敦化", walkMin:8, transit:"基準點（延吉街 · 近忠孝敦化／國父紀念館）", transitMin:0, access:"easy",
     sources:[{label:"IG 課表",url:"https://www.instagram.com/taiwannogi/p/DdwXbzvRsUS/"},{label:"官網",url:"https://www.taiwannogi.com/"},{label:"課表圖",url:"https://images.squarespace-cdn.com/content/v1/662f7814966d1f3bf331af4a/ba39b56e-ad08-4170-ade9-2f922ada42dc/New+Schedule+%284%29.png"}],
-    image:"taiwannogi_october_schedule_clear.png", note:"週四滾到飽 NEW；幾乎全 No-Gi" },
+    image:"taiwannogi_october_schedule_clear.png", coaches:"許軒維 · Steve", note:"週四滾到飽 NEW；幾乎全 No-Gi" },
   { id:"10thplanet", name:"10th Planet Taipei", district:"松山", address:"台北市松山區復興北路369號B1（公司登記另列信義基隆路一段398號4樓）", lat:25.0605, lng:121.5442, km:2.2, mrt:"中山國中", walkMin:8, transit:"忠孝復興轉文湖至中山國中再步行 · 約20–25分", transitMin:22, access:"ok",
-    sources:[{label:"官網課表",url:"https://www.10thplanettaipei.com/schedule"}],
-    image:null, note:"全館 No-Gi；無獨立 open mat" },
+    sources:[{label:"官網課表",url:"https://www.10thplanettaipei.com/schedule"},{label:"官網",url:"https://www.10thplanettaipei.com/"}],
+    image:null, coaches:"Marshall Stamper", note:"全館 No-Gi；無獨立 open mat" },
   { id:"wristlock", name:"腕鎖（土城）", district:"新北土城", address:"新北市土城區中正路1號B1-2", lat:24.98523, lng:121.44865, km:12.5, mrt:"海山", walkMin:3, transit:"板南線直達海山 · 出口近", transitMin:38, access:"ok",
     sources:[{label:"官網",url:"https://wristlockjiujitsu.com/"},{label:"IG seminar",url:"https://www.instagram.com/wristlockjiujitsu/p/Dd3iYvoT2QF/"}],
-    image:"taiwanbjj_wristlock_schedule.png", note:"台巴體系土城；平日 21:00 Open Mat（2026-03 圖）" },
+    image:"taiwanbjj_wristlock_schedule.png", coaches:"Nick Lok", note:"台巴體系土城；平日 21:00 Open Mat（2026-03 圖）" },
   { id:"wuja", name:"武甲", district:"大直／古亭／永和", address:"新北市永和區民權路53號1樓（課表圖為永和館；另有大直／古亭）", lat:25.0115, lng:121.515, km:5.3, mrt:"頂溪", walkMin:8, transit:"板南至忠孝復興轉中和新蘆至頂溪再步行", transitMin:30, access:"ok",
     sources:[{label:"官網",url:"https://www.wu-ja.com/"},{label:"IG 永和",url:"https://www.instagram.com/martial_armour/p/DbX21UGnfJv/"}],
-    image:"wuja_yonghe_schedule_clear.png", note:"自主對打未必純 BJJ" },
+    image:"wuja_yonghe_schedule_clear.png", coaches:"宋明諺 · 王羅傑", note:"自主對打未必純 BJJ" },
   { id:"pma", name:"PMA 台北", district:"中山", address:"台北市中山區新生北路三段82巷33號1樓", lat:25.06713, lng:121.52642, km:3.9, mrt:"圓山", walkMin:12, transit:"忠孝復興轉淡水信義至圓山／雙連再步行", transitMin:32, access:"ok",
     sources:[{label:"IG 課表",url:"https://www.instagram.com/pmabjjtaipei/p/DdyJbPPosJu/"}],
     image:"pma_taipei_october_schedule_clear.png", note:"" },
   { id:"dfa", name:"DFA 降龍", district:"中正", address:"台北市中正區杭州南路一段10號B1", lat:25.0425, lng:121.5255, km:2.9, mrt:"善導寺", walkMin:5, transit:"板南線直達善導寺 · 4號出口步行約5分", transitMin:18, access:"easy",
-    sources:[{label:"IG 課表",url:"https://www.instagram.com/dragonfightart/p/Dd6i9y_NgRQ/"}],
-    image:"dfa_october_2026_schedule_clear.png", note:"BJJ 班未標 Gi/No-Gi" },
+    sources:[{label:"IG 課表",url:"https://www.instagram.com/dragonfightart/p/Dd6i9y_NgRQ/"},{label:"教練師資",url:"https://www.dfamma.com/contact/"}],
+    image:"dfa_october_2026_schedule_clear.png", coaches:"Eliot · 劉漢仁", note:"BJJ 班未標 Gi/No-Gi" },
   { id:"haishan", name:"巴柔海山", district:"新北土城", address:"新北市土城區清水路33號1F", lat:24.9865, lng:121.452, km:12.1, mrt:"海山", walkMin:8, transit:"板南線直達海山再步行清水路", transitMin:42, access:"hard",
     sources:[{label:"IG",url:"https://www.instagram.com/taiwanbjj_hs/p/DcQrXDou5Ye/"}],
-    image:"taiwanbjj_haishan_schedule_clear.png", note:"體驗課表" },
+    image:"taiwanbjj_haishan_schedule_clear.png", coaches:"Otis Huang", note:"體驗課表" },
 
   { id:"twbjj_taipei", name:"台巴·台北本院", district:"中山吉林", address:"台北市中山區吉林路12-3號B1", lat:25.0525, lng:121.5305, km:2.6, mrt:"松江南京", walkMin:8, transit:"忠孝新生轉松江南京 · 或步行／短程公車", transitMin:25, access:"ok",
-    sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/taipei/"},{label:"課表圖",url:"https://taiwanbjj.org/twbjj-wp-04/wp-content/uploads/2026/09/20260914%E5%8F%B0%E5%8C%97%E6%9C%AC%E9%99%A2%E8%AA%B2%E8%A1%A8-1.jpg"},{label:"Facebook",url:"https://www.facebook.com/taiwanbjj/"}],
-    image:"taiwanbjj_taipei_jilin_schedule.png", note:"2026-09 課表；含多時段 Open Mat" },
+    sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/taipei/"},{label:"課表圖",url:"https://taiwanbjj.org/twbjj-wp-04/wp-content/uploads/2026/09/20260914%E5%8F%B0%E5%8C%97%E6%9C%AC%E9%99%A2%E8%AA%B2%E8%A1%A8-1.jpg"},{label:"Facebook",url:"https://www.facebook.com/taiwanbjj/"},{label:"教練總覽",url:"https://taiwanbjj.org/en/instructors/"}],
+    image:"taiwanbjj_taipei_jilin_schedule.png", coaches:"小笠原誠 · Makoto Ogasawara", note:"2026-09 課表；含多時段 Open Mat" },
   { id:"twbjj_zhongzheng", name:"台巴·中正", district:"中正", address:"台北市中正區南昌路一段153號2F", lat:25.0268, lng:121.5165, km:4.3, mrt:"古亭", walkMin:8, transit:"忠孝復興轉淡水信義／中和新蘆至古亭再步行", transitMin:28, access:"ok",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/zhongzheng/"},{label:"IG",url:"https://www.instagram.com/taiwanbjj_zhzh/"}],
-    image:"taiwanbjj_zhongzheng_schedule.png", note:"平日 21:30 Open Mat" },
+    image:"taiwanbjj_zhongzheng_schedule.png", coaches:"Johnny Pai", note:"平日 21:30 Open Mat" },
   { id:"twbjj_zhonghe", name:"台巴·中和", district:"新北中和", address:"新北市中和區中正路755號2F", lat:25.0045, lng:121.488, km:8.0, mrt:"橋和", walkMin:6, transit:"轉環狀線／中和新蘆至橋和再步行", transitMin:40, access:"ok",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/zhonghe/"},{label:"IG",url:"https://www.instagram.com/taiwanbjj_zhonghe/"}],
-    image:"taiwanbjj_zhonghe_schedule.png", note:"" },
+    image:"taiwanbjj_zhonghe_schedule.png", coaches:"Otis Huang", note:"" },
   { id:"twbjj_haishan", name:"台巴·海山", district:"新北土城", address:"新北市土城區清水路33號1F", lat:24.9865, lng:121.452, km:12.1, mrt:"海山", walkMin:8, transit:"板南線直達海山再步行清水路", transitMin:42, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/taiwan-bjj-branch/"},{label:"IG",url:"https://www.instagram.com/taiwanbjj_hs/"}],
-    image:"taiwanbjj_haishan_schedule.png", note:"與中和同教練體系" },
+    image:"taiwanbjj_haishan_schedule.png", coaches:"Otis Huang", note:"與中和同教練體系" },
   { id:"twbjj_ankeng", name:"台巴·安坑", district:"新北新店", address:"新北市新店區安城街2巷3號", lat:24.962, lng:121.513, km:10.0, mrt:"安坑", walkMin:10, transit:"轉安坑輕軌／新店線 · 較偏遠", transitMin:55, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/ankeng/"},{label:"IG",url:"https://www.instagram.com/taiwanbjjankeng/"}],
-    image:"taiwanbjj_ankeng_schedule.png", note:"課表偏週末／三五" },
+    image:"taiwanbjj_ankeng_schedule.png", coaches:"Sean Huang", note:"課表偏週末／三五" },
   { id:"twbjj_linkou", name:"台巴·林口", district:"新北林口", address:"新北市林口區忠孝三路28號", lat:25.07009, lng:121.362, km:19.6, mrt:"林口", walkMin:10, transit:"轉機場線至林口 · 約50–70分", transitMin:65, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/linkou/"},{label:"FB",url:"https://www.facebook.com/TWBJJLinkou/"}],
-    image:"taiwanbjj_linkou_schedule.png", note:"" },
+    image:"taiwanbjj_linkou_schedule.png", coaches:"Jerry Cheng", note:"" },
   { id:"twbjj_xinzhuang", name:"台巴·新莊", district:"新北新莊", address:"新北市新莊區萬安街53號", lat:25.02305, lng:121.42088, km:13.7, mrt:"丹鳳", walkMin:10, transit:"轉中和新蘆至丹鳳／新莊再步行", transitMin:50, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/xinzhuang/"}],
     image:"taiwanbjj_xinzhuang_schedule.png", note:"含瑜珈／TRX 非柔術時段已略" },
