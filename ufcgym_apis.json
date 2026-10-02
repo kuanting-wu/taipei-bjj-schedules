@@ -1,0 +1,62 @@
+[
+  {
+    "url": "https://booking.ufcgym.com.tw/offers",
+    "status": 200
+  },
+  {
+    "url": "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/assets/offers-hero-octagon-poster-l66Hk--d.jpg",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/assets/offers-plans-transition-poster-D0yK6rqt.jpg",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/config",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/config",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/session-availability?ids=wc-dn-0530-1200-basic-boxing-2026-10-10%2Cwc-dn-0530-1200-basic-boxing-2026-10-17%2Cwc-dn-0530-1200-basic-boxing-2026-10-24%2Cwc-dn-0530-1200-basic-boxing-2026-10-31%2Cwc-dn-0530-1500-basic-muaythai-2026-10-10%2Cwc-dn-0530-1500-basic-muaythai-2026-10-17%2Cwc-dn-0530-1500-basic-muaythai-2026-10-24%2Cwc-dn-0530-1500-basic-muaythai-2026-10-31%2Cwc-dn-0530-1600-basic-boxing-2026-10-10%2Cwc-dn-0530-1600-basic-boxing-2026-10-17%2Cwc-dn-0530-1600-basic-boxing-2026-10-24%2Cwc-dn-0530-1600-basic-boxing-2026-10-31%2Cwc-nh-0530-1100-basic-boxing-2026-10-10%2Cwc-nh-0530-1100-basic-boxing-2026-10-17%2Cwc-nh-0530-1100-basic-boxing-2026-10-24%2Cwc-nh-0530-1100-basic-boxing-2026-10-31%2Cwc-nh-0530-1200-basic-kickbox-2026-10-10%2Cwc-nh-0530-1200-basic-kickbox-2026-10-17%2Cwc-nh-0530-1200-basic-kickbox-2026-10-24%2Cwc-nh-0530-1200-basic-kickbox-2026-10-31%2Cwc-nh-0530-1600-basic-boxing-2026-10-10%2Cwc-nh-0530-1600-basic-boxing-2026-10-17%2Cwc-nh-0530-1600-basic-boxing-2026-10-24%2Cwc-nh-0530-1600-basic-boxing-2026-10-31%2Cwc-nh-0531-1200-basic-kickbox-2026-10-11%2Cwc-nh-0531-1200-basic-kickbox-2026-10-18%2Cwc-nh-0531-1200-basic-kickbox-2026-10-25%2Cwc-nh-0531-1200-basic-kickbox-2026-11-01%2Cwc-nh-0531-1400-boxing-tech-2026-10-11%2Cwc-nh-0531-1400-boxing-tech-2026-10-18%2Cwc-nh-0531-1400-boxing-tech-2026-10-25%2Cwc-nh-0531-1400-boxing-tech-2026-11-01%2Cwc-tc-0530-1700-basic-muaythai-2026-10-10%2Cwc-tc-0530-1700-basic-muaythai-2026-10-17%2Cwc-tc-0530-1700-basic-muaythai-2026-10-24%2Cwc-tc-0530-1700-basic-muaythai-2026-10-31%2Cwc-tc-0531-1100-basic-kickbox-2026-10-11%2Cwc-tc-0531-1100-basic-kickbox-2026-10-18%2Cwc-tc-0531-1100-basic-kickbox-2026-10-25%2Cwc-tc-0531-1100-basic-kickbox-2026-11-01%2Cwc-tc-0531-1600-basic-boxing-2026-10-11%2Cwc-tc-0531-1600-basic-boxing-2026-10-18%2Cwc-tc-0531-1600-basic-boxing-2026-10-25%2Cwc-tc-0531-1600-basic-boxing-2026-11-01%2Cwc-tc-0531-1700-boxing-tech-2026-10-11%2Cwc-tc-0531-1700-boxing-tech-2026-10-18%2Cwc-tc-0531-1700-boxing-tech-2026-10-25%2Cwc-tc-0531-1700-boxing-tech-2026-11-01",
+    "status": 200
+  },
+  {
+    "url": "https://api.line.me/liff/v2/apps/2009987027-Bg2WJN7H/contextToken",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/events",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/events",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/events",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/events",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/events",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/events",
+    "status": 200
+  },
+  {
+    "url": "https://booking.ufcgym.com.tw/api/session-availability?ids=wc-dn-0530-1200-basic-boxing-2026-10-10%2Cwc-dn-0530-1200-basic-boxing-2026-10-17%2Cwc-dn-0530-1200-basic-boxing-2026-10-24%2Cwc-dn-0530-1200-basic-boxing-2026-10-31%2Cwc-dn-0530-1500-basic-muaythai-2026-10-10%2Cwc-dn-0530-1500-basic-muaythai-2026-10-17%2Cwc-dn-0530-1500-basic-muaythai-2026-10-24%2Cwc-dn-0530-1500-basic-muaythai-2026-10-31%2Cwc-dn-0530-1600-basic-boxing-2026-10-10%2Cwc-dn-0530-1600-basic-boxing-2026-10-17%2Cwc-dn-0530-1600-basic-boxing-2026-10-24%2Cwc-dn-0530-1600-basic-boxing-2026-10-31%2Cwc-nh-0530-1100-basic-boxing-2026-10-10%2Cwc-nh-0530-1100-basic-boxing-2026-10-17%2Cwc-nh-0530-1100-basic-boxing-2026-10-24%2Cwc-nh-0530-1100-basic-boxing-2026-10-31%2Cwc-nh-0530-1200-basic-kickbox-2026-10-10%2Cwc-nh-0530-1200-basic-kickbox-2026-10-17%2Cwc-nh-0530-1200-basic-kickbox-2026-10-24%2Cwc-nh-0530-1200-basic-kickbox-2026-10-31%2Cwc-nh-0530-1600-basic-boxing-2026-10-10%2Cwc-nh-0530-1600-basic-boxing-2026-10-17%2Cwc-nh-0530-1600-basic-boxing-2026-10-24%2Cwc-nh-0530-1600-basic-boxing-2026-10-31%2Cwc-nh-0531-1200-basic-kickbox-2026-10-11%2Cwc-nh-0531-1200-basic-kickbox-2026-10-18%2Cwc-nh-0531-1200-basic-kickbox-2026-10-25%2Cwc-nh-0531-1200-basic-kickbox-2026-11-01%2Cwc-nh-0531-1400-boxing-tech-2026-10-11%2Cwc-nh-0531-1400-boxing-tech-2026-10-18%2Cwc-nh-0531-1400-boxing-tech-2026-10-25%2Cwc-nh-0531-1400-boxing-tech-2026-11-01%2Cwc-tc-0530-1700-basic-muaythai-2026-10-10%2Cwc-tc-0530-1700-basic-muaythai-2026-10-17%2Cwc-tc-0530-1700-basic-muaythai-2026-10-24%2Cwc-tc-0530-1700-basic-muaythai-2026-10-31%2Cwc-tc-0531-1100-basic-kickbox-2026-10-11%2Cwc-tc-0531-1100-basic-kickbox-2026-10-18%2Cwc-tc-0531-1100-basic-kickbox-2026-10-25%2Cwc-tc-0531-1100-basic-kickbox-2026-11-01%2Cwc-tc-0531-1600-basic-boxing-2026-10-11%2Cwc-tc-0531-1600-basic-boxing-2026-10-18%2Cwc-tc-0531-1600-basic-boxing-2026-10-25%2Cwc-tc-0531-1600-basic-boxing-2026-11-01%2Cwc-tc-0531-1700-boxing-tech-2026-10-11%2Cwc-tc-0531-1700-boxing-tech-2026-10-18%2Cwc-tc-0531-1700-boxing-tech-2026-10-25%2Cwc-tc-0531-1700-boxing-tech-2026-11-01",
+    "status": 200
+  }
+]

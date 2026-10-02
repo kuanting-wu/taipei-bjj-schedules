@@ -1,0 +1,26 @@
+UFC GYM Taiwan Greater Taipei schedule research (checked 2026-10-02, UTC+8)
+
+Scope / branches
+- Official Taiwan site lists two Greater Taipei branches: 台北-敦南旗艦館 (Dunnan, 大安區安和路一段27號 B1) and 台北-內科模範館 (Neihu, 內湖區洲子街55號 1F). It also lists a Taichung branch, excluded.
+
+Sources
+1. Official Taiwan site: https://www.ufcgym.com.tw/
+   Extracted branch text: 台北-敦南旗艦館 — 台北市大安區安和路一段27號 B1 — 02-8773-3772; 台北-內科模範館 — 台北市內湖區洲子街55號1F — 02-2799-6666. The course list explicitly includes 巴西柔術.
+2. Dunnan official Facebook: https://www.facebook.com/UFCGYMTWDunhua/
+   Public schedule photo/post used: https://www.facebook.com/UFCGYMTWDunhua/posts/%E4%BA%94%E6%9C%88%E8%AA%B2%E8%A1%A8%E4%BE%86%E5%9B%89%E6%BA%96%E5%82%99%E5%A5%BD%E8%BF%8E%E6%8E%A5%E5%A4%8F%E5%A4%A9%E4%BA%86%E5%97%8E%E6%9C%AC%E6%9C%88%E6%9C%89%E4%B8%8A%E7%B7%9A%E5%B9%BE%E4%BD%8D%E6%96%B0%E6%95%99%E7%B7%B4%E5%94%B7%E5%BF%AB%E4%BE%86%E6%84%9F%E5%8F%97%E4%B8%80%E4%B8%8B%E4%B8%8D%E5%90%8C%E7%9A%84%E6%8E%88%E8%AA%B2%E9%A2%A8%E6%A0%BC-ufcgymtaiwan-ufcgym-triandifferent-fitne/608790721271000/
+   Image header/date: 2023 MAY. OCR BJJ-focused rows include: 初階巴西柔術(GI), 初階巴西柔術(NO GI), 巴西柔術 GI, 巴西柔術 NO GI, 巴西柔術(ALL), 巴西柔術(ADV), 兒童巴西柔術(5-12), 青少年巴柔進階(10-15), plus 巴西柔術基礎練習. Rows appear repeatedly around 12:10, 13:10, 17:10, 18:10, 19:10, 20:10 and 21:10 depending on day; see PNG for exact day/time cells.
+3. Neihu official Facebook: https://www.facebook.com/UFCGYMTWNeihu/
+   Latest clear public schedule image found: /workspace/bjj-schedules/site/ufcgym_neihu_2024sep_zh.jpg (2024 SEP; surfaced from the branch/public image search).
+   Extracted BJJ rows: Mon 18:10 初階巴柔(NOGI), 19:10 巴西柔術(ALL,GI); Tue 18:10 巴西柔術(NOGI); Wed 19:10 巴西柔術(ALL,GI); Thu 18:10 巴西柔術(NOGI), 20:10/21:10 巴西柔術(ALL,GI); Sat/Sun multiple 兒童巴柔/兒童柔術 (5-12) rows. No explicit open-mat row found. The PNG preserves the full timetable.
+4. Official Instagram profile: https://www.instagram.com/ufcgymtaiwan/
+   Public highlights: 本月課表 https://www.instagram.com/stories/highlights/17842376703414265/ ; 巴西柔術 https://www.instagram.com/stories/highlights/18027539146419911/
+   Profile publicly shows highlights for 本月課表, 巴西柔術, 兒童課程, etc. The current 本月課表 highlight viewed publicly was a Taichung schedule slide; 巴西柔術 highlight was an older class/community slide, not a current Taipei timetable.
+5. Public booking/landing page: https://booking.ufcgym.com.tw/
+   Confirms Dunnan and Neihu as selectable Taipei branches and mentions 巴西柔術, but no public timetable.
+
+Files
+- /workspace/bjj-schedules/site/ufcgym_dunnan_schedule.png — public Dunnan May 2023 schedule image (1448x2048).
+- /workspace/bjj-schedules/site/ufcgym_neihu_schedule.png — public Neihu September 2024 schedule image (1138x1597).
+
+Limitations
+- Live/current branch timetables are promoted through the UFC GYM app/booking flow; public pages expose branch info and some old schedule images but not a current Taipei BJJ/open-mat timetable. Facebook post pages displayed a Log In wall when opened directly, and I stopped there per instruction. No public rows explicitly labeled “open mat” were found; the BJJ/NO-GI/GI rows above are the closest grappling entries.
