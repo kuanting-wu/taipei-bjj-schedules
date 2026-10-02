@@ -150,6 +150,14 @@
   .tag.access-easy { color: #fca5a5; border-color: #ef4444; }
   .tag.access-ok { color: #fcd34d; border-color: #f59e0b; }
   .tag.access-hard { color: #94a3b8; border-color: #64748b; }
+  .badge.base, .tag.base {
+    color: #ddd6fe; border-color: var(--accent);
+    background: rgba(167,139,250,.12);
+  }
+  .badge.rival, .tag.rival {
+    color: #fca5a5; border-color: #ef4444;
+    background: rgba(239,68,68,.12);
+  }
   .dist { font-size: .78rem; color: var(--muted); margin-top: .2rem; line-height: 1.35; }
   .dist strong { color: var(--text); font-weight: 600; }
   .matrix-gym-meta {
@@ -911,6 +919,18 @@ function gymToneClass(g) {
   if (isRival(g)) return "rival";
   return "";
 }
+/** Badge/tag class: rivals always red (even if access is ok/yellow) */
+function accessToneClass(g) {
+  const tone = gymToneClass(g);
+  if (tone === "rival") return "access-easy"; /* red near-rival chrome */
+  if (tone === "base") return "base";
+  return "access-" + (g.access || "ok");
+}
+function accessToneLabel(g) {
+  if (isBase(g)) return "基準";
+  if (isRival(g)) return "近（紅）";
+  return accessLabel(g.access);
+}
 function gymsOrdered() {
   let list = GYMS.slice();
   if (state.access === "easy") list = list.filter(g => g.access === "easy");
@@ -1052,7 +1072,7 @@ function updateMap() {
       seen[key] = 0;
     }
     const popup = `<div class="pop-name">${g.name}</div>
-      <div class="pop-meta"><span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></div>
+      <div class="pop-meta"><span class="badge ${accessToneClass(g)}">${accessToneLabel(g)}</span></div>
       <div class="pop-meta">${distLine(g)}</div>
       <button type="button" data-open="${g.id}">看課表詳情</button>`;
     const marker = L.marker([lat, lng], { icon: pinIcon(g), title: g.name })
@@ -1158,7 +1178,7 @@ function showDetail(gymId) {
   }).join("");
   el.className = "open";
   el.innerHTML = `<h2>${g.name} <span style="color:var(--muted);font-size:.9rem">${g.district}</span>
-      <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></h2>
+      <span class="badge ${accessToneClass(g)}">${accessToneLabel(g)}</span></h2>
     <p class="dist"><strong>${distLine(g)}</strong></p>
     ${coachLine(g) ? `<p class="coach-line">${coachLine(g)}</p>` : ""}
     <p style="font-size:.85rem;color:var(--muted)">${g.address || ""}</p>
@@ -1272,7 +1292,7 @@ function renderMatrix() {
         <span class="dline">距離 ${km} km</span>
         <span class="dline">預估 ${mins} 分</span>
         ${coach ? `<span class="coach-line">${coach}</span>` : ""}
-        <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span>
+        <span class="badge ${accessToneClass(g)}">${accessToneLabel(g)}</span>
       </span></th>`;
   });
   html += `</tr></thead><tbody>`;
@@ -1298,7 +1318,7 @@ function renderCards() {
     const gs = slots.filter(s => s.g === g.id);
     const has = new Set(gs.map(s => s.t));
     return `<div class="gym-card ${gymToneClass(g)}" data-open="${g.id}">
-      <h3>${g.name} <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></h3>
+      <h3>${g.name} <span class="badge ${accessToneClass(g)}">${accessToneLabel(g)}</span></h3>
       <div class="meta">${g.district}${g.note ? " · " + g.note : ""}</div>
       <div class="dist">${distLine(g)}</div>
       ${coachLine(g) ? `<div class="coach-line">${coachLine(g)}</div>` : ""}
@@ -1307,7 +1327,7 @@ function renderCards() {
         ${has.has("nogi")?'<span class="tag nogi">No-Gi</span>':''}
         ${has.has("roll")?'<span class="tag roll">Rolling</span>':''}
         ${has.has("unknown")?'<span class="tag unknown">未分類</span>':''}
-        <span class="tag access-${g.access||"ok"}">${accessLabel(g.access)}</span>
+        <span class="tag ${accessToneClass(g)}">${accessToneLabel(g)}</span>
       </div>
       <p style="font-size:.8rem;color:var(--muted);margin:.75rem 0 0">${g.address || ""} · 來源 ${g.sources.length} 筆</p>
     </div>`;
@@ -1324,7 +1344,7 @@ function renderDay() {
         const g = gymById[s.g];
         return `<div class="slot ${s.t}" data-open="${s.g}" style="cursor:pointer">
         <strong>${g.name}</strong> · ${typeLabel(s.t)} · ${s.time} · ${s.title}
-        <div class="dist">${distLine(g)} · <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></div>
+        <div class="dist">${distLine(g)} · <span class="badge ${accessToneClass(g)}">${accessToneLabel(g)}</span></div>
       </div>`;
       }).join("") : '<span class="empty">—</span>'}</div>`;
   }).join("")}</div>`;
