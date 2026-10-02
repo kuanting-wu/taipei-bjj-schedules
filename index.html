@@ -55,11 +55,21 @@
   .tick-row { display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); margin-top: .15rem; }
   .live-list { max-height: 220px; overflow: auto; display: grid; gap: .4rem; }
   .live-item {
-    display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline;
-    padding: .45rem .6rem; border-radius: 8px; background: #0f1419; border: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: .35rem .5rem; align-items: baseline;
+    padding: .4rem .55rem; border-radius: 8px; background: #0f1419; border: 1px solid var(--border);
     font-size: .85rem; cursor: pointer;
   }
   .live-item:hover { border-color: var(--accent); }
+  .live-item.base { border-color: var(--accent); background: rgba(167,139,250,.08); }
+  .live-item.base strong { color: var(--accent); }
+  .live-item.rival { border-color: #ef4444; background: rgba(239,68,68,.07); }
+  .live-item.rival strong { color: #fca5a5; }
+  .live-item.rival:hover { border-color: #f87171; }
+  .live-dist {
+    font-size: .68rem; color: var(--muted); letter-spacing: .01em;
+    margin-left: auto; white-space: nowrap;
+  }
+  .live-item .title-muted { color: var(--muted); font-size: .8rem; flex: 1 1 8rem; min-width: 0; }
   .badge { font-size: .7rem; padding: .1rem .4rem; border-radius: 999px; border: 1px solid; }
   .badge.gi { color: #93c5fd; border-color: var(--gi); }
   .badge.nogi { color: #86efac; border-color: var(--nogi); }
@@ -89,11 +99,25 @@
     padding: .5rem 1rem; border-radius: 8px; cursor: pointer;
   }
   .view-tabs button.active { background: #2a3550; border-color: var(--accent); }
-  .matrix-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
-  table.matrix { border-collapse: collapse; width: 100%; min-width: 900px; font-size: .82rem; }
-  table.matrix th, table.matrix td { border: 1px solid var(--border); padding: .5rem; vertical-align: top; background: var(--card); }
-  table.matrix th { position: sticky; top: 0; z-index: 2; background: #243044; }
-  table.matrix th.day, table.matrix td.day { position: sticky; left: 0; z-index: 3; background: #1e293b; font-weight: 600; min-width: 3.2rem; }
+  .matrix-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 12px; -webkit-overflow-scrolling: touch; }
+  table.matrix { border-collapse: collapse; width: 100%; min-width: 1280px; font-size: .82rem; }
+  table.matrix th, table.matrix td { border: 1px solid var(--border); padding: .55rem .5rem; vertical-align: top; background: var(--card); }
+  table.matrix th {
+    position: sticky; top: 0; z-index: 2; background: #243044;
+    min-width: 9.75rem; max-width: 13rem; white-space: normal; vertical-align: bottom;
+    padding: .7rem .55rem .65rem; line-height: 1.35;
+  }
+  table.matrix th.day, table.matrix td.day {
+    position: sticky; left: 0; z-index: 3; background: #1e293b; font-weight: 600;
+    min-width: 3.4rem; max-width: 3.4rem; vertical-align: middle;
+  }
+  table.matrix th.day { z-index: 4; vertical-align: bottom; }
+  table.matrix th .chip {
+    white-space: normal; line-height: 1.25; padding: .4rem .45rem; font-size: .8rem;
+    border-radius: 8px; text-align: center;
+  }
+  table.matrix th.rival .chip { border-color: #ef4444; color: #fca5a5; }
+  table.matrix th.base .chip { border-color: var(--accent); color: #ddd6fe; }
   .slot { margin: .2rem 0; padding: .25rem .4rem; border-radius: 6px; font-size: .78rem; }
   .slot.gi { background: rgba(59,130,246,.2); border-left: 3px solid var(--gi); }
   .slot.nogi { background: rgba(34,197,94,.2); border-left: 3px solid var(--nogi); }
@@ -130,7 +154,16 @@
   .tag.access-hard { color: #fca5a5; border-color: #ef4444; }
   .dist { font-size: .78rem; color: var(--muted); margin-top: .2rem; line-height: 1.35; }
   .dist strong { color: var(--text); font-weight: 600; }
-  .matrix-gym-meta { display:block; font-size:.68rem; color:var(--muted); font-weight:400; margin-top:.2rem; line-height:1.3; }
+  .matrix-gym-meta {
+    display: flex; flex-direction: column; gap: .2rem; align-items: flex-start;
+    font-size: .72rem; color: var(--muted); font-weight: 400; margin-top: .4rem; line-height: 1.35;
+  }
+  .matrix-gym-meta .dline { display: block; color: var(--text); font-variant-numeric: tabular-nums; }
+  .matrix-gym-meta .badge { margin-top: .1rem; }
+  .gym-card.rival { border-color: rgba(239,68,68,.55); }
+  .gym-card.rival h3 { color: #fca5a5; }
+  .gym-card.base { border-color: rgba(167,139,250,.55); }
+  .gym-card.base h3 { color: #ddd6fe; }
   .access-note { font-size:.8rem; color:var(--muted); margin:.35rem 0 0; max-width:52rem; }
   .sort-controls { display:flex; flex-wrap:wrap; gap:.6rem; align-items:flex-end; }
 
@@ -201,8 +234,9 @@
     .view-tabs { gap: .35rem; }
     .view-tabs button { flex: 1 1 auto; padding: .65rem .5rem; font-size: .85rem; }
     .matrix-wrap { -webkit-overflow-scrolling: touch; max-height: 70vh; }
-    table.matrix { min-width: 640px; font-size: .75rem; }
-    table.matrix th, table.matrix td { padding: .35rem; }
+    table.matrix { min-width: 980px; font-size: .75rem; }
+    table.matrix th { min-width: 8.5rem; max-width: 11rem; padding: .55rem .4rem; }
+    table.matrix th, table.matrix td { padding: .4rem .35rem; }
     .gym-grid { grid-template-columns: 1fr; }
     .live-list { max-height: 40vh; }
     .live-item { flex-direction: column; align-items: flex-start; gap: .2rem; padding: .6rem; }
@@ -677,6 +711,27 @@ function distLine(g) {
   const mins = g.transitMin != null ? g.transitMin : "?";
   return `距離 ${km} km · 預估 ${mins} 分`;
 }
+/** Compact numbers-only line for timeline / tight UI */
+function distShort(g) {
+  if (g.km == null && g.transitMin == null) return "";
+  const km = g.km != null ? g.km : "?";
+  const mins = g.transitMin != null ? g.transitMin : "?";
+  return `${km} km · ${mins} 分`;
+}
+/** Nearby rivals of Taiwanogi (red); base gym itself stays accent */
+function isBase(g) { return g && g.id === "taiwannogi"; }
+function isRival(g) {
+  if (!g || isBase(g)) return false;
+  if (g.access === "easy") return true;
+  if (g.km != null && g.km <= 3) return true;
+  if (g.transitMin != null && g.transitMin <= 20) return true;
+  return false;
+}
+function gymToneClass(g) {
+  if (isBase(g)) return "base";
+  if (isRival(g)) return "rival";
+  return "";
+}
 function gymsOrdered() {
   let list = GYMS.slice();
   if (state.access === "easy") list = list.filter(g => g.access === "easy");
@@ -867,13 +922,13 @@ function updateScrubber() {
   } else {
     list.innerHTML = act.sort((a,b) => a.start - b.start || a.g.localeCompare(b.g)).map(iv => {
       const g = gymById[iv.g];
-      return `<div class="live-item" data-open="${iv.g}">
+      const tone = gymToneClass(g);
+      return `<div class="live-item ${tone}" data-open="${iv.g}">
         <span class="badge ${iv.t}">${typeLabel(iv.t)}</span>
         <strong>${g.name}</strong>
-        <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span>
         <span>${iv.labelTime}</span>
-        <span style="color:var(--muted)">${iv.title}</span>
-        <span style="color:var(--muted);font-size:.75rem">${g.district} · ${distLine(g)}</span>
+        <span class="title-muted">${iv.title}</span>
+        <span class="live-dist">${distShort(g)}</span>
       </div>`;
     }).join("");
   }
@@ -928,8 +983,15 @@ function renderMatrix() {
   let html = `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="day">星期</th>`;
   gymIds.forEach(id => {
     const g = gymById[id];
-    html += `<th><button type="button" class="chip" style="width:100%" data-open="${id}">${g.name}</button>
-      <span class="matrix-gym-meta">${distLine(g)} · <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></span></th>`;
+    const tone = gymToneClass(g);
+    const km = g.km != null ? g.km : "?";
+    const mins = g.transitMin != null ? g.transitMin : "?";
+    html += `<th class="${tone}"><button type="button" class="chip" style="width:100%" data-open="${id}">${g.name}</button>
+      <span class="matrix-gym-meta">
+        <span class="dline">距離 ${km} km</span>
+        <span class="dline">預估 ${mins} 分</span>
+        <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span>
+      </span></th>`;
   });
   html += `</tr></thead><tbody>`;
   days.forEach(d => {
@@ -953,7 +1015,7 @@ function renderCards() {
   document.getElementById("cardsView").innerHTML = `<div class="gym-grid">${list.map(g => {
     const gs = slots.filter(s => s.g === g.id);
     const has = new Set(gs.map(s => s.t));
-    return `<div class="gym-card" data-open="${g.id}">
+    return `<div class="gym-card ${gymToneClass(g)}" data-open="${g.id}">
       <h3>${g.name} <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></h3>
       <div class="meta">${g.district}${g.note ? " · " + g.note : ""}</div>
       <div class="dist">${distLine(g)}</div>
