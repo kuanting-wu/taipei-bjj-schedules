@@ -580,10 +580,6 @@
   <label>道館
     <select id="gymFilter"><option value="all">全部</option></select>
   </label>
-  <label class="now-only-label" style="flex-direction:row;align-items:center;gap:.45rem;margin-top:1.15rem">
-    <input type="checkbox" id="nowOnly" style="width:1.05rem;height:1.05rem;accent-color:#ef4444" />
-    <span>只顯示此刻課程</span>
-  </label>
   <label>搜尋
     <input type="search" id="q" placeholder="滾到飽、open mat…" />
   </label>
@@ -594,6 +590,16 @@
       <button type="button" class="chip nogi on" data-type="nogi"><span class="dot nogi"></span>No-Gi</button>
       <button type="button" class="chip roll on" data-type="roll"><span class="dot roll"></span>Rolling</button>
       <button type="button" class="chip unk on" data-type="unknown"><span class="dot unk"></span>未分類</button>
+    </div>
+    <div class="chips time-toggles" style="margin-top:.5rem">
+      <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
+        <input type="checkbox" id="gymsAtNow" style="accent-color:#ef4444" />
+        顯示所選時間道館
+      </label>
+      <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
+        <input type="checkbox" id="slotsAtNow" style="accent-color:#ef4444" />
+        顯示所選時間課程
+      </label>
     </div>
   </div>
   <div class="sort-controls">
@@ -624,7 +630,7 @@
       <div class="now-clock">此刻 <span id="clockLabel">20:40</span> <span id="scrubDayLabel" style="font-size:.95rem;font-weight:600;color:var(--muted)">· 星期四</span></div>
       <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
     </div>
-    <p class="align-hint" style="margin:0 0 .45rem">拖曳時間軸標示「此刻」（對齊檢視<strong style="color:#fca5a5">紅線</strong>）。勾選「只顯示此刻課程」則課表／統計只留進行中。</p>
+    <p class="align-hint" style="margin:0 0 .45rem">拖曳時間軸標示「此刻」（對齊檢視<strong style="color:#fca5a5">紅線</strong>）。類型旁可勾：只留此刻有課的道館欄／只留此刻進行中的課。</p>
     <div class="time-rail">
       <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
     </div>
@@ -1147,7 +1153,7 @@ const state = {
   q: "", view: "matrix",
   scrubMin: 12*60,
   sortBy: "transitMin", access: "all", maxKm: 0,
-  nowOnly: false
+  gymsAtNow: false, slotsAtNow: false
 };
 function taipeiNowDate() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
@@ -1394,6 +1400,31 @@ function slotActiveAt(s, day, min) {
   if (s.d !== day) return false;
   return expandTimes(s.time).some(iv => iv.start <= min && min < iv.end);
 }
+
+function slotMatchesFilters(s) {
+  const q = state.q.trim().toLowerCase();
+  if (state.day !== "all" && s.d !== state.day) return false;
+  if (state.gym !== "all" && s.g !== state.gym) return false;
+  if (!state.types.has(s.t)) return false;
+  if (q) {
+    const g = gymById[s.g];
+    if (!`${g.name} ${s.title} ${s.time} ${s.t} ${g.mrt||""} ${g.transit||""}`.toLowerCase().includes(q)) return false;
+  }
+  return true;
+}
+/** Gyms for matrix/align; optionally only those with a class at scrubber time */
+function gymsForScheduleViews() {
+  let list = state.gym === "all" ? gymsOrdered() : GYMS.filter(g => g.id === state.gym);
+  if (!state.gymsAtNow) return list;
+  const dayNow = scrubViewDay();
+  const min = state.scrubMin;
+  const allowed = new Set(gymsOrdered().map(g => g.id));
+  return list.filter(g => {
+    if (state.gym === "all" && !allowed.has(g.id)) return false;
+    return SLOTS.some(s => s.g === g.id && slotMatchesFilters(s) && slotActiveAt(s, dayNow, min));
+  });
+}
+
 function filteredSlots() {
   const q = state.q.trim().toLowerCase();
   const allowed = new Set(gymsOrdered().map(g => g.id));
@@ -1404,7 +1435,7 @@ function filteredSlots() {
     if (state.gym !== "all" && s.g !== state.gym) return false;
     if (state.gym === "all" && !allowed.has(s.g)) return false;
     if (!state.types.has(s.t)) return false;
-    if (state.nowOnly && !slotActiveAt(s, dayNow, min)) return false;
+    if (state.slotsAtNow && !slotActiveAt(s, dayNow, min)) return false;
     if (q) {
       const g = gymById[s.g];
       if (!`${g.name} ${s.title} ${s.time} ${s.t} ${g.mrt||""} ${g.transit||""}`.toLowerCase().includes(q)) return false;
@@ -1466,7 +1497,7 @@ function packLanes(list) {
 
 function renderAlign() {
   const day = alignDay();
-  const gyms = (state.gym === "all" ? gymsOrdered() : GYMS.filter(g => g.id === state.gym));
+  const gyms = gymsForScheduleViews();
   const slots = filteredSlots().filter(s => s.d === day);
   const span = ALIGN_END - ALIGN_START;
   const height = Math.round(span * ALIGN_PX);
@@ -1544,7 +1575,7 @@ function renderAlign() {
 
 function renderMatrix() {
   const slots = filteredSlots();
-  const gymIds = state.gym === "all" ? gymsOrdered().map(g => g.id) : [state.gym];
+  const gymIds = gymsForScheduleViews().map(g => g.id);
   const days = state.day === "all" ? DAYS : [state.day];
   const dayNow = scrubViewDay();
   let html = `<p class="matrix-now-hint">紅框＝篩選此刻 <strong>${fmtMin(state.scrubMin)}</strong>（星期${dayNow}）進行中的課</p>`;
@@ -1666,8 +1697,10 @@ document.getElementById("timeRange").oninput = e => {
   updateScrubber();
   render();
 };
-const nowOnlyEl = document.getElementById("nowOnly");
-if (nowOnlyEl) nowOnlyEl.onchange = e => { state.nowOnly = !!e.target.checked; updateScrubber(); render(); };
+const gymsAtNowEl = document.getElementById("gymsAtNow");
+const slotsAtNowEl = document.getElementById("slotsAtNow");
+if (gymsAtNowEl) gymsAtNowEl.onchange = e => { state.gymsAtNow = !!e.target.checked; updateScrubber(); render(); };
+if (slotsAtNowEl) slotsAtNowEl.onchange = e => { state.slotsAtNow = !!e.target.checked; updateScrubber(); render(); };
 document.getElementById("jumpNow").onclick = () => {
   syncToTaipeiNow();
   updateScrubber();
