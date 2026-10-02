@@ -1668,16 +1668,18 @@ function barRow(fillClass, lab, n, denom) {
   return `<div class="bar-row"><span class="lab" title="${tip}">${lab}</span><div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div><span class="n" title="${tip}">${shown}</span></div>`;
 }
 
-/** Intervals for charts + top counters: at selected time, or all filtered (ignore slotsAtNow) */
-function statsPool(actAtTime) {
-  if (hasScrubTime()) return actAtTime || [];
+/**
+ * Fully filtered interval pool for ALL stats (counters + every chart mode).
+ * Includes day/gym/type chips/search/access(via gymsOrdered). Ignores slotsAtNow.
+ */
+function statsFilteredIntervals() {
   const allowed = new Set(gymsOrdered().map(g => g.id));
   const q = state.q.trim().toLowerCase();
   return INTERVALS.filter(iv => {
     if (state.day !== "all" && iv.d !== state.day) return false;
     if (state.gym !== "all" && iv.g !== state.gym) return false;
     if (state.gym === "all" && !allowed.has(iv.g)) return false;
-    if (!state.types.has(iv.t)) return false;
+    if (!state.types.has(iv.t)) return false; // type chips: Gi / No-Gi / Rolling / 未分類
     if (q) {
       const g = gymById[iv.g];
       if (!`${g.name} ${iv.title} ${iv.time} ${iv.t} ${g.mrt||""}`.toLowerCase().includes(q)) return false;
@@ -1686,22 +1688,15 @@ function statsPool(actAtTime) {
   });
 }
 
+/** Charts + top counters: live-at-scrub set if time selected, else full filtered day. */
+function statsPool(actAtTime) {
+  if (hasScrubTime()) return actAtTime || [];
+  return statsFilteredIntervals();
+}
 
-/** Filtered intervals for full-day charts (ignore scrub time / slotsAtNow). */
+/** Alias for full-day charts (時序 / 熱力). Always type-filtered. */
 function statsIntervalsDay() {
-  const allowed = new Set(gymsOrdered().map(g => g.id));
-  const q = state.q.trim().toLowerCase();
-  return INTERVALS.filter(iv => {
-    if (state.day !== "all" && iv.d !== state.day) return false;
-    if (state.gym !== "all" && iv.g !== state.gym) return false;
-    if (state.gym === "all" && !allowed.has(iv.g)) return false;
-    if (!state.types.has(iv.t)) return false;
-    if (q) {
-      const g = gymById[iv.g];
-      if (!`${g.name} ${iv.title} ${iv.time} ${iv.t} ${g.mrt||""}`.toLowerCase().includes(q)) return false;
-    }
-    return true;
-  });
+  return statsFilteredIntervals();
 }
 
 /** SVG line chart: type composition across hourly buckets (06–22). Unit = pct|count. */
@@ -1789,15 +1784,17 @@ function renderTimelineChart(host) {
   }
 
   const dayLab = state.day === "all" ? "一～日合計（同時段）" : ("星期" + state.day);
-  const legend = ["gi", "nogi", "roll", "unknown"].map(k =>
+  const enabledTypes = ["gi", "nogi", "roll", "unknown"].filter(k => state.types.has(k));
+  const legend = enabledTypes.map(k =>
     '<span><i class="' + (k === "unknown" ? "unk" : k) + '"></i>' + labels[k] + "</span>"
   ).join("");
   const yLab = asPct ? "Y＝該時段內課型占比" : "Y＝該時段內堂數";
+  const polys = enabledTypes.map(k => poly(k)).join("");
 
   host.innerHTML = '<div class="line-chart-wrap">'
     + '<svg class="line-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="課型時序圖">'
     + '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0f1419" rx="8" />'
-    + grid + poly("gi") + poly("nogi") + poly("roll") + poly("unknown") + nowMark
+    + grid + polys + nowMark
     + '</svg>'
     + '<div class="line-legend">' + legend + '</div>'
     + '<p class="line-meta">' + dayLab + ' · 小時桶 06–22 · ' + yLab + ' · 共 ' + base.length + ' 堂（篩選後）</p>'
@@ -1842,19 +1839,7 @@ function renderCharts(actAtTime) {
       ["晚間", "18–21", 1080, 1260],
       ["深夜", "21–24", 1260, 1440]
     ];
-    const allowed = new Set(gymsOrdered().map(g => g.id));
-    const q = state.q.trim().toLowerCase();
-    const base = INTERVALS.filter(iv => {
-      if (state.day !== "all" && iv.d !== state.day) return false;
-      if (state.gym !== "all" && iv.g !== state.gym) return false;
-      if (state.gym === "all" && !allowed.has(iv.g)) return false;
-      if (!state.types.has(iv.t)) return false;
-      if (q) {
-        const g = gymById[iv.g];
-        if (!`${g.name} ${iv.title} ${iv.time}`.toLowerCase().includes(q)) return false;
-      }
-      return true;
-    });
+    const base = statsFilteredIntervals();
     const dayRows = state.day === "all" ? DAYS : [state.day];
     const counts = {};
     let maxN = 0;
@@ -1946,19 +1931,16 @@ function renderCharts(actAtTime) {
   if (mode === "types") {
     titleEl.textContent = "課型分布";
     if (subEl) subEl.textContent = scope + (isStatPct() ? " · 佔比" : " · 數量");
-    const counts = {
-      gi: pool.filter(x => x.t === "gi").length,
-      nogi: pool.filter(x => x.t === "nogi").length,
-      roll: pool.filter(x => x.t === "roll").length,
-      unknown: pool.filter(x => x.t === "unknown").length
-    };
+    const typeRows = [
+      ["gi", "Gi", "gi"],
+      ["nogi", "No-Gi", "nogi"],
+      ["roll", "Rolling", "roll"],
+      ["unk", "未分類", "unknown"]
+    ].filter(([, , t]) => state.types.has(t));
     const total = pool.length;
-    main.innerHTML = [
-      ["gi", "Gi", counts.gi],
-      ["nogi", "No-Gi", counts.nogi],
-      ["roll", "Rolling", counts.roll],
-      ["unk", "未分類", counts.unknown]
-    ].map(([k, lab, n]) => barRow(k, lab, n, total)).join("");
+    main.innerHTML = typeRows.length
+      ? typeRows.map(([k, lab, t]) => barRow(k, lab, pool.filter(x => x.t === t).length, total)).join("")
+      : `<p class="empty" style="margin:.5rem 0">未勾選任何課型</p>`;
     return;
   }
 
@@ -2411,13 +2393,14 @@ document.getElementById("maxKm").oninput = e => {
   render(); updateScrubber();
 };
 
-document.getElementById("q").oninput = e => { state.q = e.target.value; render(); };
-document.querySelectorAll(".chips .chip").forEach(btn => {
+document.getElementById("q").oninput = e => { state.q = e.target.value; render(); updateScrubber(); };
+document.querySelectorAll(".chips .chip[data-type]").forEach(btn => {
   btn.onclick = () => {
     const t = btn.dataset.type;
     if (state.types.has(t)) state.types.delete(t); else state.types.add(t);
     btn.classList.toggle("on", state.types.has(t));
     render();
+    updateScrubber(); // refresh counters + all stats chart modes
   };
 });
 document.querySelectorAll(".view-tabs button").forEach(btn => {
