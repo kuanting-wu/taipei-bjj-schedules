@@ -265,10 +265,14 @@
   .align-hint { font-size: .8rem; color: var(--muted); margin: 0 0 .65rem; }
   .align-hint strong { color: var(--text); }
   .align-board {
-    display: grid; grid-template-columns: 3.4rem repeat(var(--cols), minmax(6.8rem, 1fr));
+    display: grid;
+    grid-template-columns: 3.4rem repeat(var(--cols), minmax(6.8rem, 1fr));
     min-width: max(100%, calc(3.4rem + var(--cols) * 6.8rem));
     position: relative;
   }
+  .align-board > .align-corner,
+  .align-board > .align-head { grid-row: 1; }
+  .align-board > .align-body { grid-column: 1 / -1; }
   .align-corner, .align-head {
     position: sticky; top: 0; z-index: 6; background: #1e293b;
     border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
@@ -312,20 +316,51 @@
   }
   .align-block .t { font-weight: 700; font-size: .62rem; opacity: .9; }
   .align-block:hover { filter: brightness(1.12); z-index: 4; }
-  .align-now {
-    position: absolute; left: 0; right: 0; height: 2px; background: #ef4444;
-    z-index: 4; pointer-events: none; box-shadow: 0 0 8px #ef4444;
+  /* Full-width selected-time line ON the gym×time grid */
+  .align-body {
+    grid-row: 2; grid-column: 1 / -1;
+    position: relative; display: flex; align-items: stretch;
+    isolation: isolate;
   }
-  .align-now-label {
-    position: absolute; left: 0; z-index: 8; font-size: .62rem; color: #fecaca;
-    background: rgba(15,20,25,.92); padding: 0 .25rem; transform: translateY(-50%);
-    border-radius: 4px; pointer-events: none; border: 1px solid #ef4444;
+  .align-body .align-time-col {
+    flex: 0 0 3.4rem; width: 3.4rem; position: sticky; left: 0; z-index: 5;
+    grid-column: auto; /* override old grid-column */
+  }
+  .align-cols {
+    flex: 1 1 auto; display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(6.8rem, 1fr));
+    min-width: 0;
+  }
+  .align-now-cross {
+    position: absolute; left: 0; right: 0; height: 3px;
+    background: #ef4444;
+    box-shadow: 0 0 0 1px #fecaca, 0 0 14px rgba(239,68,68,.9);
+    z-index: 30; pointer-events: none;
+  }
+  .align-now-cross .align-now-label {
+    position: absolute; left: .35rem; top: 50%; transform: translateY(-50%);
+    font-size: .72rem; font-weight: 700; color: #fff;
+    background: #ef4444; padding: .12rem .45rem; border-radius: 4px;
+    white-space: nowrap; border: 1px solid #fecaca;
+    box-shadow: 0 2px 8px rgba(0,0,0,.35);
   }
   .align-block.live {
     outline: 2px solid #fff; box-shadow: 0 0 0 2px #ef4444, 0 0 14px rgba(239,68,68,.45);
+    z-index: 3; filter: brightness(1.15);
   }
+  .slot.live-now {
+    outline: 2px solid #ef4444;
+    box-shadow: 0 0 0 1px #fecaca, 0 0 10px rgba(239,68,68,.45);
+    position: relative;
+  }
+  .matrix-now-hint {
+    font-size: .8rem; color: #fca5a5; margin: 0 0 .55rem;
+  }
+  .matrix-now-hint strong { color: #fecaca; }
   @media (max-width: 720px) {
-    .align-board { grid-template-columns: 2.8rem repeat(var(--cols), minmax(5.8rem, 1fr)); }
+    .align-board { grid-template-columns: 1fr; }
+    .align-body .align-time-col { flex-basis: 2.8rem; width: 2.8rem; }
+    .align-cols { grid-template-columns: repeat(var(--cols), minmax(5.8rem, 1fr)); }
     .align-block { font-size: .6rem; padding: .18rem .22rem; }
   }
 
@@ -1427,28 +1462,27 @@ function renderAlign() {
   const nowTop = (nowMin - ALIGN_START) * ALIGN_PX;
   const cols = Math.max(1, gyms.length);
 
-  let html = `<p class="align-hint">星期<strong>${day}</strong>${state.day === "all" ? "（篩選＝全部 → 台北今天）" : ""} · <strong>直軸＝時間</strong>（上→下）· 欄＝道館。紅線／紅框＝時間軸「此刻」進行中。</p>`;
+  let html = `<p class="align-hint">星期<strong>${day}</strong>${state.day === "all" ? "（篩選＝全部 → 台北今天）" : ""} · 直軸＝時間 · 欄＝道館。課表上的<strong style="color:#fca5a5">紅線＝篩選「此刻」${fmtMin(nowMin)}</strong>。</p>`;
   html += `<div class="align-wrap"><div class="align-board" style="--cols:${cols};--pxm:${ALIGN_PX}">`;
 
-  // header
+  // sticky header row
   html += `<div class="align-corner">時間</div>`;
   gyms.forEach(g => {
     const tone = gymToneClass(g);
     html += `<div class="align-head ${tone}" data-open="${g.id}">${g.name}<span class="sub">${distShort(g)}</span></div>`;
   });
 
-  // time column + gym columns share same row height via grid auto row
-  // Use one body row that spans: time ticks + N columns
-  html += `<div class="align-time-col" style="height:${height}px;grid-row:2;grid-column:1">`;
+  // body: flex row so one absolute red line spans ALL gym columns
+  html += `<div class="align-body" style="height:${height}px">`;
+  html += `<div class="align-time-col" style="height:${height}px">`;
   hours.forEach(h => {
     if (h === 23) return;
     const top = (h * 60 - ALIGN_START) * ALIGN_PX;
     html += `<span class="tick" style="top:${top}px">${String(h).padStart(2,"0")}:00</span>`;
   });
-  if (showNow) html += `<span class="align-now-label" style="top:${nowTop}px">此刻 ${fmtMin(nowMin)}</span>`;
-  html += `</div>`;
+  html += `</div><div class="align-cols" style="height:${height}px">`;
 
-  gyms.forEach((g, gi) => {
+  gyms.forEach((g) => {
     const raw = slots.filter(s => s.g === g.id).flatMap(s =>
       expandTimes(s.time).map(iv => ({
         ...s, start: iv.start, end: iv.end,
@@ -1456,8 +1490,7 @@ function renderAlign() {
       }))
     ).filter(iv => iv.end > ALIGN_START && iv.start < ALIGN_END);
     const { items, lanes } = packLanes(raw);
-    html += `<div class="align-col" style="height:${height}px;grid-row:2;grid-column:${gi + 2}">`;
-    if (showNow) html += `<i class="align-now" style="top:${nowTop}px"></i>`;
+    html += `<div class="align-col" style="height:${height}px">`;
     items.forEach(iv => {
       const start = Math.max(iv.start, ALIGN_START);
       const end = Math.min(iv.end, ALIGN_END);
@@ -1473,15 +1506,34 @@ function renderAlign() {
     html += `</div>`;
   });
 
-  html += `</div></div>`;
-  document.getElementById("alignView").innerHTML = html;
+  html += `</div>`; // align-cols
+  if (showNow) {
+    html += `<div class="align-now-cross" style="top:${nowTop}px" title="此刻 ${fmtMin(nowMin)}">`;
+    html += `<span class="align-now-label">此刻 ${fmtMin(nowMin)}</span>`;
+    html += `</div>`;
+  }
+  html += `</div></div></div>`; // body, board, wrap
+
+  const root = document.getElementById("alignView");
+  root.innerHTML = html;
+  // Keep red line in view when scrubbing
+  if (showNow && state.view === "align") {
+    const line = root.querySelector(".align-now-cross");
+    const wrap = root.querySelector(".align-wrap");
+    if (line && wrap) {
+      const y = Math.max(0, nowTop - wrap.clientHeight * 0.35);
+      wrap.scrollTop = y;
+    }
+  }
 }
 
 function renderMatrix() {
   const slots = filteredSlots();
   const gymIds = state.gym === "all" ? gymsOrdered().map(g => g.id) : [state.gym];
   const days = state.day === "all" ? DAYS : [state.day];
-  let html = `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="day">星期</th>`;
+  const dayNow = scrubViewDay();
+  let html = `<p class="matrix-now-hint">紅框＝篩選此刻 <strong>${fmtMin(state.scrubMin)}</strong>（星期${dayNow}）進行中的課</p>`;
+  html += `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="day">星期</th>`;
   gymIds.forEach(id => {
     const g = gymById[id];
     const tone = gymToneClass(g);
@@ -1503,7 +1555,10 @@ function renderMatrix() {
       const cell = slots.filter(s => s.d === d && s.g === id);
       html += `<td data-open="${id}">`;
       if (!cell.length) html += `<span class="empty">—</span>`;
-      else cell.forEach(s => { html += `<div class="slot ${s.t}"><strong>${typeLabel(s.t)}</strong> ${s.time}<br/>${s.title}</div>`; });
+      else cell.forEach(s => {
+        const live = slotActiveAt(s, scrubViewDay(), state.scrubMin);
+        html += `<div class="slot ${s.t}${live ? " live-now" : ""}"><strong>${typeLabel(s.t)}</strong> ${s.time}<br/>${s.title}</div>`;
+      });
       html += `</td>`;
     });
     html += `</tr>`;
