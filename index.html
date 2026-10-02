@@ -1378,9 +1378,15 @@ function clearScrubTime() {
  * When day=all AND time selected → Taipei today (for「此刻」).
  */
 function scrubViewDay() {
+  // Only an explicitly picked weekday. day=all never becomes「今天」.
   if (state.day !== "all") return state.day;
-  if (hasScrubTime()) return taipeiWeekday();
   return null;
+}
+/** True if slot is live at scrubMin on its own weekday (for day=all). */
+function slotLiveAtScrub(s) {
+  if (!hasScrubTime()) return false;
+  const day = state.day === "all" ? s.d : state.day;
+  return slotActiveAt(s, day, state.scrubMin);
 }
 
 function typeLabel(t) {
@@ -1602,7 +1608,7 @@ function renderCharts(actAtTime) {
   const pool = statsPool(actAtTime);
   const _chartDay = scrubViewDay();
   const scope = hasScrubTime()
-    ? (`所選時刻 ${fmtMin(state.scrubMin)}` + (_chartDay ? ` · 星期${_chartDay}${state.day === "all" ? "（今天）" : ""}` : ""))
+    ? (`所選時刻 ${fmtMin(state.scrubMin)}` + (_chartDay ? ` · 星期${_chartDay}` : ""))
     : (state.day === "all" ? "全日（未選時刻）" : `星期${state.day} 全日（未選時刻）`);
 
   document.querySelectorAll("#statsModes [data-stat-mode]").forEach(btn => {
@@ -1757,10 +1763,19 @@ function updateScrubber() {
   const sdl = document.getElementById("scrubDayLabel");
   if (sdl) {
     if (!hasScrubTime()) sdl.textContent = "· 未選時刻";
-    else if (day) sdl.textContent = "· 星期" + day + (state.day === "all" ? "（今天）" : "");
+    else if (state.day === "all") sdl.textContent = "· 全部星期";
+    else if (day) sdl.textContent = "· 星期" + day;
     else sdl.textContent = "· 請選星期";
   }
-  let act = (hasScrubTime() && day) ? activeAt(day, min) : [];
+  let act = [];
+  if (hasScrubTime()) {
+    if (state.day === "all") {
+      // union of classes at this clock time across Mon–Sun
+      DAYS.forEach(d => { act = act.concat(activeAt(d, min)); });
+    } else if (day) {
+      act = activeAt(day, min);
+    }
+  }
   const allowedGyms = new Set(gymsOrdered().map(g => g.id));
   act = act.filter(iv => {
     if (state.gym !== "all" && iv.g !== state.gym) return false;
@@ -1974,7 +1989,7 @@ function renderAlign() {
     html += `星期<strong>${state.day}</strong> · 直軸＝時間 · 欄＝道館。`;
   }
   html += hasScrubTime()
-    ? ` 課表上的<strong style="color:#fca5a5">紅線＝篩選「此刻」${fmtMin(nowMin)}</strong>${liveDay ? `（標在星期${liveDay}${state.day === "all" ? "＝台北今天" : ""}）` : ""}。`
+    ? ` 課表上的<strong style="color:#fca5a5">紅線＝篩選「此刻」${fmtMin(nowMin)}</strong>${liveDay ? `（標在星期${liveDay}${state.day === "all" ? "＝各星期同時刻" : ""}）` : ""}。`
     : ` <span style="color:var(--muted)">未選時刻（無紅線／時間篩選）。</span>`;
   html += `</p>`;
 
@@ -2012,7 +2027,7 @@ function renderMatrix() {
   const days = state.day === "all" ? DAYS : [state.day];
   const dayNow = scrubViewDay();
   let html = hasScrubTime() && dayNow
-    ? `<p class="matrix-now-hint">紅框＝篩選此刻 <strong>${fmtMin(state.scrubMin)}</strong>（星期${dayNow}${state.day === "all" ? "＝台北今天" : ""}）進行中的課</p>`
+    ? `<p class="matrix-now-hint">紅框＝篩選此刻 <strong>${fmtMin(state.scrubMin)}</strong>（星期${dayNow}${state.day === "all" ? "＝各星期同時刻" : ""}）進行中的課</p>`
     : `<p class="matrix-now-hint" style="color:var(--muted)">未選時刻 — 顯示全部（點時間軸或「跳到現在」）</p>`;
   html += `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="day">星期</th>`;
   gymIds.forEach(id => {
@@ -2038,7 +2053,7 @@ function renderMatrix() {
       if (!cell.length) html += `<span class="empty">—</span>`;
       else cell.forEach(s => {
         const _sd = scrubViewDay();
-        const live = hasScrubTime() && _sd && slotActiveAt(s, _sd, state.scrubMin);
+        const live = slotLiveAtScrub(s);
         html += `<div class="slot ${s.t}${live ? " live-now" : ""}"><strong>${typeLabel(s.t)}</strong> ${s.time}<br/>${s.title}</div>`;
       });
       html += `</td>`;
