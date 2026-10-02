@@ -8,7 +8,7 @@
 <style>
   :root {
     --bg: #0f1419; --card: #1a2332; --border: #2d3a4d; --text: #e7ecf3;
-    --muted: #8b9bb4; --gi: #3b82f6; --nogi: #22c55e; --roll: #f59e0b; --accent: #a78bfa;
+    --muted: #8b9bb4; --gi: #3b82f6; --nogi: #22c55e; --roll: #f59e0b; --unk: #94a3b8; --accent: #a78bfa;
   }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; }
@@ -27,7 +27,7 @@
   }
   .now-clock { font-size: 1.75rem; font-weight: 700; letter-spacing: .02em; }
   .now-clock span { color: var(--accent); }
-  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; margin: 1rem 0 .75rem; }
+  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .6rem; margin: 1rem 0 .75rem; }
   @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
   .stat {
     background: #0f1419; border: 1px solid var(--border); border-radius: 10px; padding: .75rem;
@@ -38,6 +38,7 @@
   .stat.gi .n { color: var(--gi); }
   .stat.nogi .n { color: var(--nogi); }
   .stat.roll .n { color: var(--roll); }
+  .stat.unk .n { color: var(--unk); }
   .compose {
     height: 14px; border-radius: 999px; overflow: hidden; display: flex; background: #0f1419;
     border: 1px solid var(--border); margin-bottom: .5rem;
@@ -46,6 +47,7 @@
   .compose .gi { background: var(--gi); }
   .compose .nogi { background: var(--nogi); }
   .compose .roll { background: var(--roll); }
+  .compose .unk { background: var(--unk); }
   .compose-legend { font-size: .75rem; color: var(--muted); margin-bottom: .85rem; }
   input[type="range"] {
     width: 100%; accent-color: var(--accent); cursor: pointer; height: 1.5rem;
@@ -62,7 +64,7 @@
   .badge.gi { color: #93c5fd; border-color: var(--gi); }
   .badge.nogi { color: #86efac; border-color: var(--nogi); }
   .badge.roll { color: #fcd34d; border-color: var(--roll); }
-  .badge.unknown { color: var(--muted); border-color: var(--border); }
+  .badge.unknown { color: #cbd5e1; border-color: var(--unk); }
   .controls {
     display: flex; flex-wrap: wrap; gap: .75rem; padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border); align-items: center;
@@ -77,8 +79,9 @@
   .chip.gi.on { outline-color: var(--gi); }
   .chip.nogi.on { outline-color: var(--nogi); }
   .chip.roll.on { outline-color: var(--roll); }
+  .chip.unk.on { outline-color: var(--unk); }
   .dot { width: .65rem; height: .65rem; border-radius: 50%; display: inline-block; margin-right: .25rem; }
-  .dot.gi { background: var(--gi); } .dot.nogi { background: var(--nogi); } .dot.roll { background: var(--roll); }
+  .dot.gi { background: var(--gi); } .dot.nogi { background: var(--nogi); } .dot.roll { background: var(--roll); } .dot.unk { background: var(--unk); }
   main { padding: 1rem 1.5rem 3rem; }
   .view-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
   .view-tabs button {
@@ -95,7 +98,7 @@
   .slot.gi { background: rgba(59,130,246,.2); border-left: 3px solid var(--gi); }
   .slot.nogi { background: rgba(34,197,94,.2); border-left: 3px solid var(--nogi); }
   .slot.roll { background: rgba(245,158,11,.22); border-left: 3px solid var(--roll); }
-  .slot.unknown { background: rgba(139,155,180,.15); border-left: 3px solid var(--muted); }
+  .slot.unknown { background: rgba(148,163,184,.18); border-left: 3px solid var(--unk); }
   .empty { color: var(--muted); }
   .gym-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
   .gym-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; cursor: pointer; }
@@ -107,6 +110,7 @@
   .tag.gi { color: #93c5fd; border-color: var(--gi); }
   .tag.nogi { color: #86efac; border-color: var(--nogi); }
   .tag.roll { color: #fcd34d; border-color: var(--roll); }
+  .tag.unknown { color: #cbd5e1; border-color: var(--unk); }
   #detail { display: none; margin-top: 1.25rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
   #detail.open { display: block; }
   #detail .links a { color: var(--accent); margin-right: 1rem; font-size: .9rem; }
@@ -240,10 +244,11 @@
     <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi 上課中</div></div>
     <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi 上課中</div></div>
     <div class="stat roll"><div class="n" id="nRoll">0</div><div class="l">Rolling／Open mat</div></div>
+    <div class="stat unk"><div class="n" id="nUnk">0</div><div class="l">未分類</div></div>
     <div class="stat"><div class="n" id="nTotal">0</div><div class="l">進行中總堂數</div></div>
   </div>
   <div class="compose" id="composeBar" aria-hidden="true"></div>
-  <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling —</div>
+  <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
   <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
   <div class="tick-row"><span>06:00</span><span>10:00</span><span>14:00</span><span>18:00</span><span>22:00</span><span>23:00</span></div>
   <h3 style="margin:1rem 0 .5rem;font-size:.95rem">此時進行中的課</h3>
@@ -277,7 +282,7 @@
       <button type="button" class="chip gi on" data-type="gi"><span class="dot gi"></span>Gi</button>
       <button type="button" class="chip nogi on" data-type="nogi"><span class="dot nogi"></span>No-Gi</button>
       <button type="button" class="chip roll on" data-type="roll"><span class="dot roll"></span>Rolling</button>
-      <button type="button" class="chip on" data-type="unknown">未標清</button>
+      <button type="button" class="chip unk on" data-type="unknown"><span class="dot unk"></span>未分類</button>
     </div>
   </div>
   <div class="sort-controls">
@@ -731,7 +736,7 @@ const state = {
 };
 
 function typeLabel(t) {
-  return ({gi:"Gi",nogi:"No-Gi",roll:"Rolling",unknown:"未標清"})[t] || t;
+  return ({gi:"Gi",nogi:"No-Gi",roll:"Rolling",unknown:"未分類"})[t] || t;
 }
 
 function activeAt(day, min) {
@@ -835,11 +840,12 @@ function updateScrubber() {
   document.getElementById("nGi").textContent = nGi;
   document.getElementById("nNogi").textContent = nNogi;
   document.getElementById("nRoll").textContent = nRoll;
+  document.getElementById("nUnk").textContent = nUnk;
   document.getElementById("nTotal").textContent = total;
   const bar = document.getElementById("composeBar");
   bar.innerHTML = "";
-  const parts = [["gi", nGi], ["nogi", nNogi], ["roll", nRoll]];
-  const typed = nGi + nNogi + nRoll;
+  const parts = [["gi", nGi], ["nogi", nNogi], ["roll", nRoll], ["unk", nUnk]];
+  const typed = nGi + nNogi + nRoll + nUnk;
   if (typed === 0) {
     bar.innerHTML = '<i style="flex:1;background:#2d3a4d"></i>';
   } else {
@@ -853,8 +859,7 @@ function updateScrubber() {
   }
   const pct = (n) => total ? Math.round(n / total * 100) : 0;
   document.getElementById("composeLegend").textContent =
-    `Gi ${nGi}（${pct(nGi)}%） · No-Gi ${nNogi}（${pct(nNogi)}%） · Rolling ${nRoll}（${pct(nRoll)}%）` +
-    (nUnk ? ` · 未標清 ${nUnk}` : "") +
+    `Gi ${nGi}（${pct(nGi)}%） · No-Gi ${nNogi}（${pct(nNogi)}%） · Rolling ${nRoll}（${pct(nRoll)}%） · 未分類 ${nUnk}（${pct(nUnk)}%）` +
     ` · 星期${day} ${fmtMin(min)}`;
   const list = document.getElementById("liveList");
   if (!act.length) {
@@ -956,6 +961,7 @@ function renderCards() {
         ${has.has("gi")?'<span class="tag gi">Gi</span>':''}
         ${has.has("nogi")?'<span class="tag nogi">No-Gi</span>':''}
         ${has.has("roll")?'<span class="tag roll">Rolling</span>':''}
+        ${has.has("unknown")?'<span class="tag unknown">未分類</span>':''}
         <span class="tag access-${g.access||"ok"}">${accessLabel(g.access)}</span>
       </div>
       <p style="font-size:.8rem;color:var(--muted);margin:.75rem 0 0">${g.address || ""} · 來源 ${g.sources.length} 筆</p>
