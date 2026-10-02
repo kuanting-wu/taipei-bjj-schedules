@@ -324,23 +324,136 @@
   .align-block.roll { background: rgba(245,158,11,.35); border-color: var(--roll); color: #fde68a; }
   .align-block.unknown { background: rgba(148,163,184,.3); border-color: var(--unk); color: #e2e8f0; }
   .align-block.live {
-    outline: 2px solid #fff; box-shadow: 0 0 0 2px var(--accent), 0 0 14px rgba(167,139,250,.55);
+    outline: 2px solid #fff; box-shadow: 0 0 0 2px #ef4444, 0 0 14px rgba(239,68,68,.45);
     z-index: 3; filter: brightness(1.15);
   }
   .align-block .t { font-weight: 700; font-size: .62rem; opacity: .9; }
   .align-block:hover { filter: brightness(1.12); z-index: 4; }
   .align-now {
-    position: absolute; left: 0; right: 0; height: 2px; background: var(--accent);
-    z-index: 4; pointer-events: none; box-shadow: 0 0 8px var(--accent);
+    position: absolute; left: 0; right: 0; height: 2px; background: #ef4444;
+    z-index: 4; pointer-events: none; box-shadow: 0 0 8px #ef4444;
   }
   .align-now-label {
-    position: absolute; left: 0; z-index: 8; font-size: .62rem; color: var(--accent);
-    background: rgba(15,20,25,.9); padding: 0 .25rem; transform: translateY(-50%);
-    border-radius: 4px; pointer-events: none;
+    position: absolute; left: 0; z-index: 8; font-size: .62rem; color: #fecaca;
+    background: rgba(15,20,25,.92); padding: 0 .25rem; transform: translateY(-50%);
+    border-radius: 4px; pointer-events: none; border: 1px solid #ef4444;
+  }
+  .align-block.live {
+    outline: 2px solid #fff; box-shadow: 0 0 0 2px #ef4444, 0 0 14px rgba(239,68,68,.45);
   }
   @media (max-width: 720px) {
     .align-board { grid-template-columns: 2.8rem repeat(var(--cols), minmax(5.8rem, 1fr)); }
     .align-block { font-size: .6rem; padding: .18rem .22rem; }
+  }
+
+
+  .layout-bar {
+    display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+    padding: .65rem 1.5rem; border-bottom: 1px solid var(--border);
+    background: #121820;
+  }
+  .layout-bar .lb { font-size: .8rem; color: var(--muted); margin-right: .25rem; }
+  .layout-bar .chip.on { outline-color: var(--accent); }
+  #appLayout {
+    display: grid; gap: 0; padding-bottom: 1rem;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "about"
+      "filters"
+      "stats"
+      "views"
+      "map"
+      "detail";
+  }
+  #appLayout > .layout-slot { min-width: 0; }
+  #appLayout .layout-slot > details.panel { margin-left: 1.5rem; margin-right: 1.5rem; }
+  /* stats TOP (default desktop) */
+  #appLayout.layout-stats-top {
+    grid-template-areas:
+      "about"
+      "filters"
+      "stats"
+      "views"
+      "map"
+      "detail";
+  }
+  /* stats RIGHT */
+  #appLayout.layout-stats-right {
+    grid-template-columns: 1fr minmax(260px, 340px);
+    grid-template-areas:
+      "about about"
+      "filters stats"
+      "views stats"
+      "map map"
+      "detail detail";
+  }
+  #appLayout.layout-stats-right .slot-stats > details.panel {
+    position: sticky; top: .5rem; margin-left: .5rem; margin-right: 1.5rem;
+  }
+  #appLayout.layout-stats-right .slot-filters > details.panel { margin-right: .5rem; }
+  #appLayout.layout-stats-right .slot-views > details.panel { margin-right: .5rem; }
+  /* stacked = same as single column */
+  #appLayout.layout-stacked {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "about"
+      "filters"
+      "stats"
+      "views"
+      "map"
+      "detail";
+  }
+  .slot-about { grid-area: about; }
+  .slot-filters { grid-area: filters; }
+  .slot-stats { grid-area: stats; }
+  .slot-views { grid-area: views; }
+  .slot-map { grid-area: map; }
+  .slot-detail { grid-area: detail; }
+
+  .time-filter {
+    margin-top: .85rem; padding-top: .85rem; border-top: 1px solid var(--border);
+  }
+  .time-filter .scrubber-top { margin-bottom: .5rem; }
+  .time-rail {
+    position: relative; margin: .35rem 0 .15rem;
+  }
+  .time-rail input[type="range"] {
+    width: 100%; accent-color: #ef4444; position: relative; z-index: 2;
+  }
+  .time-rail .time-red-line {
+    display: none; /* range thumb is the control; show marker on ticks */
+  }
+  .tick-row { position: relative; }
+  .tick-row .now-mark {
+    position: absolute; top: -6px; bottom: -2px; width: 2px; background: #ef4444;
+    box-shadow: 0 0 6px #ef4444; pointer-events: none; transform: translateX(-1px);
+  }
+  .live-list { max-height: 180px; }
+
+  .chart-block { margin: .65rem 0 .25rem; }
+  .chart-block h4 { margin: 0 0 .4rem; font-size: .85rem; color: var(--muted); font-weight: 600; }
+  .bar-chart { display: grid; gap: .35rem; }
+  .bar-row { display: grid; grid-template-columns: 4.5rem 1fr 2rem; gap: .4rem; align-items: center; font-size: .78rem; }
+  .bar-row .bar-track { height: 10px; background: #0f1419; border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  .bar-row .bar-fill { height: 100%; border-radius: 999px; min-width: 0; }
+  .bar-row .bar-fill.gi { background: var(--gi); }
+  .bar-row .bar-fill.nogi { background: var(--nogi); }
+  .bar-row .bar-fill.roll { background: var(--roll); }
+  .bar-row .bar-fill.unk { background: var(--unk); }
+  .bar-row .bar-fill.rival { background: #ef4444; }
+  .bar-row .bar-fill.far { background: #64748b; }
+  .bar-row .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+
+  @media (max-width: 900px) {
+    #appLayout.layout-stats-right {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "about" "filters" "stats" "views" "map" "detail";
+    }
+    #appLayout.layout-stats-right .slot-stats > details.panel {
+      position: static; margin-left: 1.5rem; margin-right: 1.5rem;
+    }
+    #appLayout .layout-slot > details.panel { margin-left: .75rem; margin-right: .75rem; }
   }
 
   /* —— mobile —— */
@@ -384,17 +497,26 @@
 <body>
 <header>
   <h1>大台北柔術課表 · 時間軸統計</h1>
-  <p>拖拉時間軸，看「此刻」有幾堂 Gi／No-Gi／Rolling · 亦可切矩陣／卡片 · 資料截至 2026-10-02</p>
+  <p>篩選內建時間軸（紅線＝此刻）· 課表在上、地圖在下 · 可切換統計版面 · 資料截至 2026-10-02</p>
 </header>
-<details class="panel" id="aboutPanel" data-panel="about">
+
+<div class="layout-bar" id="layoutBar">
+  <span class="lb">版面</span>
+  <button type="button" class="chip on" data-layout="stats-top">統計在上</button>
+  <button type="button" class="chip" data-layout="stats-right">統計在右</button>
+  <button type="button" class="chip" data-layout="stacked">堆疊</button>
+  <span class="lb" style="margin-left:.5rem">地圖在課表下方 · 無自由拖曳</span>
+</div>
+
+<div id="appLayout" class="layout-stats-top">
+  <div class="layout-slot slot-about"><details class="panel" id="aboutPanel" data-panel="about">
   <summary class="panel-sum">說明 <span class="panel-hint">距離基準 · 方便度</span></summary>
   <div class="panel-body">
   <p class="access-note" style="margin:0;max-width:none">距離以 <strong>Taiwanogi（延吉街）</strong> 為基準。每館顯示「距離 km · 預估通勤分」數字；方便度標籤：≤20分 easy · ≤40分 ok · 更遠／多轉 hard。鄰近對手館（紅）＝ easy 或 ≤3 km 或 ≤20 分。</p>
   </div>
-</details>
-
-<details class="panel controls-panel" id="filtersPanel" data-panel="filters" open>
-  <summary class="panel-sum">共用篩選 <span class="panel-hint">星期 · 類型 · 距離 · 道館（時間軸／對齊／矩陣共用）</span></summary>
+</details></div>
+  <div class="layout-slot slot-filters"><details class="panel controls-panel" id="filtersPanel" data-panel="filters" open>
+  <summary class="panel-sum">篩選與時間軸 <span class="panel-hint">星期 · 類型 · 此刻紅線</span></summary>
   <div class="panel-body">
 <div class="controls">
   <label>星期
@@ -443,42 +565,44 @@
     </label>
   </div>
 </div>
+  <div class="time-filter" id="scrubber">
+    <div class="scrubber-top">
+      <div class="now-clock">此刻 <span id="clockLabel">20:40</span> <span id="scrubDayLabel" style="font-size:.95rem;font-weight:600;color:var(--muted)">· 星期四</span></div>
+      <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
+    </div>
+    <p class="align-hint" style="margin:0 0 .45rem">拖曳時間軸＝篩選「此刻」；對齊檢視會畫<strong style="color:#fca5a5">紅線</strong>。</p>
+    <div class="time-rail">
+      <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
+    </div>
+    <div class="tick-row"><i class="now-mark" id="timeNowMark" aria-hidden="true"></i><span>06:00</span><span>10:00</span><span>14:00</span><span>18:00</span><span>22:00</span><span>23:00</span></div>
+    <h3 style="margin:.75rem 0 .4rem;font-size:.9rem">此時進行中的課</h3>
+    <div class="live-list" id="liveList"></div>
   </div>
-</details>
-
-<details class="panel scrubber" id="scrubber" data-panel="timeline" open>
-  <summary class="panel-sum">時間軸統計 <span class="panel-hint">Gi／No-Gi／Rolling／未分類</span></summary>
+  </div>
+</details></div>
+  <div class="layout-slot slot-stats"><details class="panel scrubber" id="statsPanel" data-panel="stats" open>
+  <summary class="panel-sum">統計圖表 <span class="panel-hint">此刻類型 · 近距 vs 遠</span></summary>
   <div class="panel-body">
-  <div class="scrubber-top">
-    <div class="now-clock">此刻 <span id="clockLabel">20:40</span> <span id="scrubDayLabel" style="font-size:.95rem;font-weight:600;color:var(--muted)">· 星期四</span></div>
-    <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
+    <div class="stats">
+      <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi</div></div>
+      <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi</div></div>
+      <div class="stat roll"><div class="n" id="nRoll">0</div><div class="l">Rolling</div></div>
+      <div class="stat unk"><div class="n" id="nUnk">0</div><div class="l">未分類</div></div>
+      <div class="stat"><div class="n" id="nTotal">0</div><div class="l">總堂數</div></div>
+    </div>
+    <div class="compose" id="composeBar" aria-hidden="true"></div>
+    <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
+    <div class="chart-block">
+      <h4>此刻課型分布</h4>
+      <div class="bar-chart" id="chartTypes"></div>
+    </div>
+    <div class="chart-block">
+      <h4>近距對手 vs 其餘（進行中）</h4>
+      <div class="bar-chart" id="chartRival"></div>
+    </div>
   </div>
-  <p class="align-hint" style="margin:.35rem 0 .5rem">星期與篩選見上方「共用篩選」。時間軸／對齊在「全部」時用台北今天。</p>
-  <div class="stats">
-    <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi 上課中</div></div>
-    <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi 上課中</div></div>
-    <div class="stat roll"><div class="n" id="nRoll">0</div><div class="l">Rolling／Open mat</div></div>
-    <div class="stat unk"><div class="n" id="nUnk">0</div><div class="l">未分類</div></div>
-    <div class="stat"><div class="n" id="nTotal">0</div><div class="l">進行中總堂數</div></div>
-  </div>
-  <div class="compose" id="composeBar" aria-hidden="true"></div>
-  <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
-  <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
-  <div class="tick-row"><span>06:00</span><span>10:00</span><span>14:00</span><span>18:00</span><span>22:00</span><span>23:00</span></div>
-  <h3 style="margin:1rem 0 .5rem;font-size:.95rem">此時進行中的課</h3>
-  <div class="live-list" id="liveList"></div>
-  </div>
-</details>
-
-<details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
-  <summary class="panel-sum">道館地圖 <span class="panel-hint">以 Taiwanogi 為中心</span></summary>
-  <div class="panel-body">
-  <p class="map-hint">暗色單色底圖。標記：紫★＝Taiwanogi · 紅＝鄰近對手（easy／≤3km／≤20分）· 灰＝其餘。篩選會同步地圖；點標記開課表。</p>
-  <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
-  </div>
-</details>
-
-<details class="panel views-panel" id="viewsPanel" data-panel="views" open>
+</details></div>
+  <div class="layout-slot slot-views"><details class="panel views-panel" id="viewsPanel" data-panel="views" open>
   <summary class="panel-sum">課表檢視 <span class="panel-hint">矩陣 · 對齊 · 卡片 · 依星期</span></summary>
   <div class="panel-body">
 <main>
@@ -494,15 +618,21 @@
   <div id="dayView" style="display:none"></div>
 </main>
   </div>
-</details>
-
-<details class="panel detail-panel" id="detailPanel" data-panel="detail">
+</details></div>
+  <div class="layout-slot slot-map"><details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
+  <summary class="panel-sum">道館地圖 <span class="panel-hint">以 Taiwanogi 為中心</span></summary>
+  <div class="panel-body">
+  <p class="map-hint">暗色單色底圖。標記：紫★＝Taiwanogi · 紅＝鄰近對手（easy／≤3km／≤20分）· 灰＝其餘。篩選會同步地圖；點標記開課表。</p>
+  <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
+  </div>
+</details></div>
+  <div class="layout-slot slot-detail"><details class="panel detail-panel" id="detailPanel" data-panel="detail">
   <summary class="panel-sum">道館詳情 <span class="panel-hint">點課表列開啟</span></summary>
   <div class="panel-body">
   <div id="detail"></div>
   </div>
-</details>
-
+</details></div>
+</div>
 <footer>
   來源為各館官網／IG／FB 公開課表；時間軸統計依解析後的時段重疊計算，僅供參考。距離／捷運以 Taiwanogi 為基準估算，非即時導航。
   <a href="https://github.com/kuanting-wu/taipei-bjj-schedules">GitHub</a> ·
@@ -850,7 +980,7 @@ const SLOTS = [
 const gymById = Object.fromEntries(GYMS.map(g => [g.id, g]));
 
 const PANEL_STORE = "bjj-panel-open-v1";
-const PANEL_DEFAULTS = { about: false, timeline: true, map: true, filters: true, views: true, detail: false };
+const PANEL_DEFAULTS = { about: false, filters: true, stats: true, map: true, views: true, detail: false };
 
 function loadPanelState() {
   try {
@@ -1091,6 +1221,78 @@ function updateMap() {
 }
 
 
+
+const LAYOUT_STORE = "bjj-layout-preset-v1";
+function applyLayout(name) {
+  const el = document.getElementById("appLayout");
+  if (!el) return;
+  const allowed = ["stats-top", "stats-right", "stacked"];
+  const layout = allowed.includes(name) ? name : "stats-top";
+  el.classList.remove("layout-stats-top", "layout-stats-right", "layout-stacked");
+  el.classList.add("layout-" + layout);
+  document.querySelectorAll("#layoutBar [data-layout]").forEach(btn => {
+    btn.classList.toggle("on", btn.dataset.layout === layout);
+  });
+  try { localStorage.setItem(LAYOUT_STORE, layout); } catch (_) {}
+  if (typeof gymMap !== "undefined" && gymMap) setTimeout(() => gymMap.invalidateSize(), 120);
+}
+function initLayout() {
+  let layout = "stats-top";
+  try { layout = localStorage.getItem(LAYOUT_STORE) || layout; } catch (_) {}
+  applyLayout(layout);
+  document.querySelectorAll("#layoutBar [data-layout]").forEach(btn => {
+    btn.onclick = () => applyLayout(btn.dataset.layout);
+  });
+}
+
+function updateTimeMark() {
+  const mark = document.getElementById("timeNowMark");
+  const range = document.getElementById("timeRange");
+  if (!mark || !range) return;
+  const min = +range.min, max = +range.max, v = +range.value;
+  const pct = (v - min) / (max - min);
+  mark.style.left = (pct * 100) + "%";
+}
+
+function renderCharts(act) {
+  const typesEl = document.getElementById("chartTypes");
+  const rivalEl = document.getElementById("chartRival");
+  if (!typesEl || !rivalEl) return;
+  const counts = {
+    gi: act.filter(x => x.t === "gi").length,
+    nogi: act.filter(x => x.t === "nogi").length,
+    roll: act.filter(x => x.t === "roll").length,
+    unknown: act.filter(x => x.t === "unknown").length
+  };
+  const total = act.length || 1;
+  const typeRows = [
+    ["gi", "Gi", counts.gi],
+    ["nogi", "No-Gi", counts.nogi],
+    ["roll", "Rolling", counts.roll],
+    ["unk", "未分類", counts.unknown]
+  ];
+  typesEl.innerHTML = typeRows.map(([k, lab, n]) => {
+    const pct = Math.round(n / total * 100);
+    return `<div class="bar-row"><span>${lab}</span><div class="bar-track"><div class="bar-fill ${k}" style="width:${pct}%"></div></div><span class="n">${n}</span></div>`;
+  }).join("");
+
+  let nRival = 0, nFar = 0;
+  act.forEach(iv => {
+    const g = gymById[iv.g];
+    if (!g || isBase(g)) return;
+    if (isRival(g)) nRival++; else nFar++;
+  });
+  const denom = Math.max(1, nRival + nFar);
+  rivalEl.innerHTML = [
+    ["rival", "近距（紅）", nRival],
+    ["far", "其餘", nFar]
+  ].map(([k, lab, n]) => {
+    const pct = Math.round(n / denom * 100);
+    return `<div class="bar-row"><span>${lab}</span><div class="bar-track"><div class="bar-fill ${k}" style="width:${pct}%"></div></div><span class="n">${n}</span></div>`;
+  }).join("");
+}
+
+
 function updateScrubber() {
   const day = scrubViewDay();
   const min = state.scrubMin;
@@ -1144,6 +1346,8 @@ function updateScrubber() {
       </div>`;
     }).join("");
   }
+  updateTimeMark();
+  renderCharts(act);
 }
 
 function filteredSlots() {
@@ -1226,7 +1430,7 @@ function renderAlign() {
   const nowTop = (nowMin - ALIGN_START) * ALIGN_PX;
   const cols = Math.max(1, gyms.length);
 
-  let html = `<p class="align-hint">星期<strong>${day}</strong>${state.day === "all" ? "（篩選＝全部 → 台北今天）" : ""} · <strong>直軸＝時間</strong>（上→下）· 欄＝道館。紫框＝時間軸「此刻」進行中。</p>`;
+  let html = `<p class="align-hint">星期<strong>${day}</strong>${state.day === "all" ? "（篩選＝全部 → 台北今天）" : ""} · <strong>直軸＝時間</strong>（上→下）· 欄＝道館。紅線／紅框＝時間軸「此刻」進行中。</p>`;
   html += `<div class="align-wrap"><div class="align-board" style="--cols:${cols};--pxm:${ALIGN_PX}">`;
 
   // header
@@ -1406,6 +1610,7 @@ document.body.addEventListener("click", e => {
 });
 
 initPanels();
+initLayout();
 updateScrubber();
 render();
 initMap();
