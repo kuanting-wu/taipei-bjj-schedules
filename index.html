@@ -618,6 +618,29 @@
   .bar-row .bar-fill.gym { background: var(--accent); }
   .bar-row .bar-fill.gym.rival { background: #ef4444; }
   .bar-row .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .line-chart-wrap {
+    flex: 1 1 auto; min-height: 11rem; display: flex; flex-direction: column; gap: .4rem;
+  }
+  .line-chart-wrap svg.line-chart {
+    width: 100%; height: auto; max-height: 220px; display: block;
+    background: #0f1419; border: 1px solid var(--border); border-radius: 10px;
+  }
+  .line-chart-wrap .line-legend {
+    display: flex; flex-wrap: wrap; gap: .35rem .65rem; font-size: .7rem; color: var(--muted);
+  }
+  .line-chart-wrap .line-legend span {
+    display: inline-flex; align-items: center; gap: .3rem;
+  }
+  .line-chart-wrap .line-legend i {
+    width: 12px; height: 3px; border-radius: 2px; display: inline-block;
+  }
+  .line-chart-wrap .line-legend i.gi { background: var(--gi); }
+  .line-chart-wrap .line-legend i.nogi { background: var(--nogi); }
+  .line-chart-wrap .line-legend i.roll { background: var(--roll); }
+  .line-chart-wrap .line-legend i.unk { background: var(--unk); }
+  .line-chart-wrap .line-meta {
+    font-size: .65rem; color: var(--muted); margin: 0;
+  }
   .heat-wrap { flex: 1 1 auto; overflow: auto; min-height: 8rem; }
   .heat-grid {
     display: grid; gap: 2px;
@@ -723,6 +746,7 @@
     <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
     <div class="stats-modes chips" id="statsModes" role="tablist" aria-label="統計模式">
       <button type="button" class="chip on" data-stat-mode="types" title="所選時刻（或全日）課型分布">課型</button>
+      <button type="button" class="chip" data-stat-mode="timeline" title="全日各時段課型占比曲線">時序</button>
       <button type="button" class="chip" data-stat-mode="rival" title="近距對手 vs 其餘">近距</button>
       <button type="button" class="chip" data-stat-mode="gyms" title="各館堂數（多→少）">道館</button>
       <button type="button" class="chip" data-stat-mode="heat" title="星期 × 時段熱力（精簡）">熱力</button>
@@ -1596,6 +1620,102 @@ function statsPool(actAtTime) {
   });
 }
 
+
+/** Filtered intervals for full-day charts (ignore scrub time / slotsAtNow). */
+function statsIntervalsDay() {
+  const allowed = new Set(gymsOrdered().map(g => g.id));
+  const q = state.q.trim().toLowerCase();
+  return INTERVALS.filter(iv => {
+    if (state.day !== "all" && iv.d !== state.day) return false;
+    if (state.gym !== "all" && iv.g !== state.gym) return false;
+    if (state.gym === "all" && !allowed.has(iv.g)) return false;
+    if (!state.types.has(iv.t)) return false;
+    if (q) {
+      const g = gymById[iv.g];
+      if (!`${g.name} ${iv.title} ${iv.time} ${iv.t} ${g.mrt||""}`.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/** SVG line chart: type composition % across hourly buckets (06–22). */
+function renderTimelineChart(host) {
+  const hours = [];
+  for (let h = 6; h <= 22; h++) hours.push(h);
+  const base = statsIntervalsDay();
+  const series = { gi: [], nogi: [], roll: [], unknown: [] };
+  const totals = [];
+  hours.forEach(h => {
+    const a = h * 60, b = (h + 1) * 60;
+    const hit = base.filter(iv => iv.start < b && iv.end > a);
+    const c = { gi: 0, nogi: 0, roll: 0, unknown: 0 };
+    hit.forEach(iv => { if (c[iv.t] != null) c[iv.t]++; else c.unknown++; });
+    const tot = c.gi + c.nogi + c.roll + c.unknown;
+    totals.push({ h, tot, ...c });
+    const pct = (n) => tot ? (n / tot) * 100 : 0;
+    series.gi.push(pct(c.gi));
+    series.nogi.push(pct(c.nogi));
+    series.roll.push(pct(c.roll));
+    series.unknown.push(pct(c.unknown));
+  });
+
+  const W = 340, H = 168;
+  const pad = { l: 34, r: 10, t: 14, b: 28 };
+  const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+  const xAt = (i) => pad.l + (hours.length <= 1 ? iw / 2 : (i / (hours.length - 1)) * iw);
+  const yAt = (pct) => pad.t + ih - (pct / 100) * ih;
+  const colors = { gi: "#3b82f6", nogi: "#22c55e", roll: "#f59e0b", unknown: "#94a3b8" };
+  const labels = { gi: "Gi", nogi: "No-Gi", roll: "Rolling", unknown: "未分類" };
+
+  function poly(key) {
+    const pts = series[key].map((v, i) => xAt(i).toFixed(1) + "," + yAt(v).toFixed(1)).join(" ");
+    let out = '<polyline fill="none" stroke="' + colors[key] + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="' + pts + '" />';
+    series[key].forEach((v, i) => {
+      const t = totals[i];
+      const tip = String(t.h).padStart(2, "0") + ":00 · " + labels[key] + " " + Math.round(v) + "%（" + t[key] + "／" + t.tot + "）";
+      out += '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(v).toFixed(1) + '" r="2.4" fill="' + colors[key] + '"><title>' + tip + '</title></circle>';
+    });
+    return out;
+  }
+
+  let grid = "";
+  [0, 25, 50, 75, 100].forEach(p => {
+    const y = yAt(p);
+    grid += '<line x1="' + pad.l + '" y1="' + y + '" x2="' + (W - pad.r) + '" y2="' + y + '" stroke="#2d3a4d" stroke-width="1" />';
+    grid += '<text x="' + (pad.l - 4) + '" y="' + (y + 3) + '" text-anchor="end" fill="#8b9bb4" font-size="9">' + p + '%</text>';
+  });
+  hours.forEach((h, i) => {
+    if (i % 2 !== 0 && i !== hours.length - 1) return;
+    grid += '<text x="' + xAt(i) + '" y="' + (H - 8) + '" text-anchor="middle" fill="#8b9bb4" font-size="9">' + String(h).padStart(2, "0") + '</text>';
+  });
+
+  let nowMark = "";
+  if (hasScrubTime()) {
+    const hm = state.scrubMin;
+    if (hm >= 6 * 60 && hm < 23 * 60) {
+      const idx = Math.min(hours.length - 1, Math.max(0, Math.floor(hm / 60) - 6));
+      const frac = (hm % 60) / 60;
+      const x = idx >= hours.length - 1 ? xAt(idx) : xAt(idx) + frac * (xAt(idx + 1) - xAt(idx));
+      nowMark = '<line x1="' + x + '" y1="' + pad.t + '" x2="' + x + '" y2="' + (pad.t + ih) + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3 3" opacity=".85" />'
+        + '<text x="' + x + '" y="' + (pad.t - 2) + '" text-anchor="middle" fill="#fca5a5" font-size="9">此刻</text>';
+    }
+  }
+
+  const dayLab = state.day === "all" ? "一～日合計（同時段）" : ("星期" + state.day);
+  const legend = ["gi", "nogi", "roll", "unknown"].map(k =>
+    '<span><i class="' + (k === "unknown" ? "unk" : k) + '"></i>' + labels[k] + "</span>"
+  ).join("");
+
+  host.innerHTML = '<div class="line-chart-wrap">'
+    + '<svg class="line-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="課型占比時序圖">'
+    + '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0f1419" rx="8" />'
+    + grid + poly("gi") + poly("nogi") + poly("roll") + poly("unknown") + nowMark
+    + '</svg>'
+    + '<div class="line-legend">' + legend + '</div>'
+    + '<p class="line-meta">' + dayLab + ' · 小時桶 06–22 · Y＝該時段內課型占比 · 共 ' + base.length + ' 堂（篩選後）</p>'
+    + '</div>';
+}
+
 function renderCharts(actAtTime) {
   const titleEl = document.getElementById("chartTitle");
   const subEl = document.getElementById("chartSub");
@@ -1671,10 +1791,22 @@ function renderCharts(actAtTime) {
     return;
   }
 
+  if (mode === "timeline") {
+    if (heatWrap) heatWrap.style.display = "none";
+    main.style.display = "";
+    titleEl.textContent = "課型占比 · 時序";
+    if (subEl) {
+      subEl.textContent = (state.day === "all" ? "一～日同時段合計" : ("星期" + state.day))
+        + " · 尊重道館／類型／搜尋／方便度篩選 · 曲線＝各時段占比";
+    }
+    renderTimelineChart(main);
+    return;
+  }
+
   if (heatWrap) heatWrap.style.display = "none";
   main.style.display = "";
   if (!pool.length) {
-    titleEl.textContent = ({ types: "課型分布", rival: "近距 vs 其餘", gyms: "各館堂數" })[mode] || "統計";
+    titleEl.textContent = ({ types: "課型分布", rival: "近距 vs 其餘", gyms: "各館堂數", timeline: "課型占比 · 時序" })[mode] || "統計";
     if (subEl) subEl.textContent = scope + " · 無資料";
     main.innerHTML = `<p class="empty" style="margin:.5rem 0">尚無符合的課</p>`;
     return;
@@ -1739,7 +1871,7 @@ function initStatModes() {
   const store = "bjj-stat-mode-v1";
   try {
     const saved = localStorage.getItem(store);
-    if (["types", "rival", "gyms", "heat"].includes(saved)) state.statMode = saved;
+    if (["types", "timeline", "rival", "gyms", "heat"].includes(saved)) state.statMode = saved;
   } catch (_) {}
   document.querySelectorAll("#statsModes [data-stat-mode]").forEach(btn => {
     btn.onclick = () => {
