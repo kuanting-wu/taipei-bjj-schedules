@@ -573,7 +573,7 @@
     <select id="dayFilter">
       <option value="all">全部（矩陣／列表）</option>
       <option value="一">一</option><option value="二">二</option><option value="三">三</option>
-      <option value="四" selected>四</option><option value="五">五</option><option value="六">六</option>
+      <option value="四">四</option><option value="五">五</option><option value="六">六</option>
       <option value="日">日</option>
     </select>
   </label>
@@ -1145,14 +1145,29 @@ const state = {
   day: "四", gym: "all",
   types: new Set(["gi","nogi","roll","unknown"]),
   q: "", view: "matrix",
-  scrubMin: 20*60+40,
+  scrubMin: 12*60,
   sortBy: "transitMin", access: "all", maxKm: 0,
   nowOnly: false
 };
+function taipeiNowDate() {
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+}
 function taipeiWeekday() {
   const map = ["日","一","二","三","四","五","六"];
-  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
-  return map[now.getDay()];
+  return map[taipeiNowDate().getDay()];
+}
+function taipeiScrubMin() {
+  const now = taipeiNowDate();
+  return Math.min(1380, Math.max(360, now.getHours()*60 + Math.floor(now.getMinutes()/5)*5));
+}
+/** Set day filter + scrubber to Asia/Taipei wall-clock now */
+function syncToTaipeiNow() {
+  state.day = taipeiWeekday();
+  state.scrubMin = taipeiScrubMin();
+  const df = document.getElementById("dayFilter");
+  if (df) df.value = state.day;
+  const tr = document.getElementById("timeRange");
+  if (tr) tr.value = String(state.scrubMin);
 }
 /** Shared day for scrubber + align: explicit filter, else Taipei today */
 function scrubViewDay() {
@@ -1654,11 +1669,7 @@ document.getElementById("timeRange").oninput = e => {
 const nowOnlyEl = document.getElementById("nowOnly");
 if (nowOnlyEl) nowOnlyEl.onchange = e => { state.nowOnly = !!e.target.checked; updateScrubber(); render(); };
 document.getElementById("jumpNow").onclick = () => {
-  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
-  state.day = taipeiWeekday();
-  const df = document.getElementById("dayFilter");
-  if (df) df.value = state.day;
-  state.scrubMin = Math.min(1380, Math.max(360, now.getHours()*60 + Math.floor(now.getMinutes()/5)*5));
+  syncToTaipeiNow();
   updateScrubber();
   render();
 };
@@ -1669,6 +1680,7 @@ document.body.addEventListener("click", e => {
 
 initPanels();
 initLayout();
+syncToTaipeiNow();
 updateScrubber();
 render();
 initMap();
