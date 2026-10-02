@@ -670,11 +670,7 @@ function distLine(g) {
   if (g.km == null && g.transitMin == null) return "";
   const km = g.km != null ? g.km : "?";
   const mins = g.transitMin != null ? g.transitMin : "?";
-  const parts = [`距離 ${km} km`, `預估 ${mins} 分`];
-  const walk = g.walkMin != null ? `步行${g.walkMin}分` : "";
-  const mrt = g.mrt ? `捷運${g.mrt}` : "";
-  if (mrt || walk) parts.push([mrt, walk].filter(Boolean).join(" "));
-  return parts.join(" · ");
+  return `距離 ${km} km · 預估 ${mins} 分`;
 }
 function gymsOrdered() {
   let list = GYMS.slice();
@@ -806,10 +802,8 @@ function updateMap() {
       seen[key] = 0;
     }
     const popup = `<div class="pop-name">${g.name}</div>
-      <div class="pop-meta">${g.district} · <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></div>
+      <div class="pop-meta"><span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></div>
       <div class="pop-meta">${distLine(g)}</div>
-      <div class="pop-meta">${g.mrt ? "捷運"+g.mrt+(g.walkMin!=null?" 步行"+g.walkMin+"分":"") : ""}</div>
-      <div class="pop-meta">${g.address || ""}</div>
       <button type="button" data-open="${g.id}">看課表詳情</button>`;
     const marker = L.marker([lat, lng], { icon: pinIcon(g), title: g.name })
       .addTo(gymMap)
@@ -914,7 +908,7 @@ function showDetail(gymId) {
   el.className = "open";
   el.innerHTML = `<h2>${g.name} <span style="color:var(--muted);font-size:.9rem">${g.district}</span>
       <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></h2>
-    <p class="dist"><strong>${distLine(g)}</strong>${g.transit ? " · " + g.transit : ""}</p>
+    <p class="dist"><strong>${distLine(g)}</strong></p>
     <p style="font-size:.85rem;color:var(--muted)">${g.address || ""}</p>
     <p>${g.note || ""}</p>
     <div class="links"><strong>資料來源：</strong>${links}</div>${img}
@@ -959,7 +953,6 @@ function renderCards() {
       <h3>${g.name} <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></h3>
       <div class="meta">${g.district}${g.note ? " · " + g.note : ""}</div>
       <div class="dist">${distLine(g)}</div>
-      <div class="dist" style="margin-top:.15rem">${g.transit || ""}</div>
       <div class="tags" style="margin-top:.65rem">
         ${has.has("gi")?'<span class="tag gi">Gi</span>':''}
         ${has.has("nogi")?'<span class="tag nogi">No-Gi</span>':''}
