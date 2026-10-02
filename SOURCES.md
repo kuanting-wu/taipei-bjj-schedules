@@ -85,7 +85,7 @@
 - **Transit (embedded):** MRT 圓山 · 3.9 km · ~32 min · access `ok`
 - **Transit detail string:** 忠孝復興轉淡水信義至圓山／雙連再步行
 - **Transit notes pointer:** see [transit_notes.txt](./transit_notes.txt) (Taiwanogi-origin estimates)
-- **Coaches:** — (none evidenced; see COACHES.md)
+- **Coaches:** — (none on public IG/FB/schedule; see [COACHES.md](./COACHES.md))
 - **Schedule image:** `pma_taipei_october_schedule_clear.png`
 - **Schedule / page sources** (from `GYMS.sources`):
   - [IG 課表](https://www.instagram.com/pmabjjtaipei/p/DdyJbPPosJu/)
@@ -208,7 +208,7 @@
 - **Transit (embedded):** MRT 丹鳳 · 13.7 km · ~50 min · access `hard`
 - **Transit detail string:** 轉中和新蘆至丹鳳／新莊再步行
 - **Transit notes pointer:** see [transit_notes.txt](./transit_notes.txt) (Taiwanogi-origin estimates)
-- **Coaches:** — (none evidenced; see COACHES.md)
+- **Coaches:** 葉政哲 · 黃德軒 — [分館頁（中文）](https://taiwanbjj.org/zh/%E6%96%B0%E8%8E%8A/)
 - **Schedule image:** `taiwanbjj_xinzhuang_schedule.png`
 - **Note:** 含瑜珈／TRX 非柔術時段已略
 - **Schedule / page sources** (from `GYMS.sources`):
@@ -221,7 +221,7 @@
 - **Transit (embedded):** MRT 汐科 · 10.4 km · ~55 min · access `hard`
 - **Transit detail string:** 板南至南港轉台鐵至汐科／汐止再步行 · 無近捷運
 - **Transit notes pointer:** see [transit_notes.txt](./transit_notes.txt) (Taiwanogi-origin estimates)
-- **Coaches:** — (none evidenced; see COACHES.md)
+- **Coaches:** John Lu — [en/xizhi](https://taiwanbjj.org/en/xizhi/) · [zh/汐止](https://taiwanbjj.org/zh/%E6%B1%90%E6%AD%A2/)
 - **Schedule image:** `taiwanbjj_xizhi_schedule.png`
 - **Schedule / page sources** (from `GYMS.sources`):
   - [分館頁](https://taiwanbjj.org/en/xi-zhi/)
@@ -233,7 +233,7 @@
 - **Transit (embedded):** MRT 忠孝敦化 · 0.5 km · ~12 min · access `easy`
 - **Transit detail string:** 忠孝敦化5號出口步行約2分（同站圈）
 - **Transit notes pointer:** see [transit_notes.txt](./transit_notes.txt) (Taiwanogi-origin estimates)
-- **Coaches:** — (none evidenced; see COACHES.md)
+- **Coaches:** — (schedule OCR unnamed; see [COACHES.md](./COACHES.md))
 - **Schedule image:** `ufcgym_dunnan_schedule.png`
 - **Note:** 課表圖為 2023-05 公開版；現行請以 App／館內為準。無標 Open Mat
 - **Schedule / page sources** (from `GYMS.sources`):
@@ -249,7 +249,7 @@
 - **Transit (embedded):** MRT 港墘 · 4.5 km · ~35 min · access `ok`
 - **Transit detail string:** 需轉文湖線至港墘 · 2號出口步行約1分
 - **Transit notes pointer:** see [transit_notes.txt](./transit_notes.txt) (Taiwanogi-origin estimates)
-- **Coaches:** — (none evidenced; see COACHES.md)
+- **Coaches:** — (schedule OCR unnamed; see [COACHES.md](./COACHES.md))
 - **Schedule image:** `ufcgym_neihu_schedule.png`
 - **Note:** 課表圖為 2024-09 公開版；無標 Open Mat
 - **Schedule / page sources** (from `GYMS.sources`):
