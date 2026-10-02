@@ -130,6 +130,56 @@
   .access-note { font-size:.8rem; color:var(--muted); margin:.35rem 0 0; max-width:52rem; }
   .sort-controls { display:flex; flex-wrap:wrap; gap:.6rem; align-items:flex-end; }
 
+
+  .map-section {
+    margin: 1rem 1.5rem; padding: 1rem 1.25rem; background: var(--card);
+    border: 1px solid var(--border); border-radius: 14px;
+  }
+  .map-section h2 { margin: 0 0 .35rem; font-size: 1.05rem; }
+  .map-section .map-hint { margin: 0 0 .75rem; font-size: .8rem; color: var(--muted); }
+  #gymMap {
+    width: 100%; height: 360px; border-radius: 10px;
+    border: 1px solid var(--border); background: #0b1016; z-index: 1;
+  }
+  .leaflet-container { background: #0b1016; font: inherit; }
+  .leaflet-popup-content-wrapper {
+    background: #1a2332; color: var(--text); border: 1px solid var(--border);
+    border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  }
+  .leaflet-popup-tip { background: #1a2332; }
+  .leaflet-popup-content { margin: .65rem .8rem; font-size: .85rem; line-height: 1.4; }
+  .leaflet-popup-content .pop-name { font-weight: 700; margin-bottom: .2rem; }
+  .leaflet-popup-content .pop-meta { color: var(--muted); font-size: .78rem; }
+  .leaflet-popup-content button {
+    margin-top: .55rem; background: #2a3550; color: var(--text);
+    border: 1px solid var(--accent); border-radius: 8px; padding: .35rem .7rem; cursor: pointer; font-size: .8rem;
+  }
+  .leaflet-control-zoom a {
+    background: #1a2332 !important; color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  .leaflet-control-attribution {
+    background: rgba(15,20,25,.85) !important; color: var(--muted) !important; font-size: .65rem !important;
+  }
+  .leaflet-control-attribution a { color: var(--accent) !important; }
+    .leaflet-div-icon { background: transparent; border: none; }
+  .map-pin {
+    width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+    border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .map-pin span {
+    transform: rotate(45deg); font-size: .7rem; font-weight: 700; color: #fff; line-height: 1;
+  }
+  .map-pin.base { background: var(--accent); width: 34px; height: 34px; border-color: #ede9fe; }
+  .map-pin.easy { background: #22c55e; }
+  .map-pin.ok { background: #f59e0b; }
+  .map-pin.hard { background: #ef4444; }
+  @media (max-width: 720px) {
+    .map-section { margin: .75rem; padding: .9rem; }
+    #gymMap { height: 320px; }
+  }
+
   /* —— mobile —— */
   @media (max-width: 720px) {
     header { padding: 1rem; }
@@ -163,6 +213,9 @@
   }
 
 </style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body>
 <header>
@@ -195,6 +248,12 @@
   <div class="tick-row"><span>06:00</span><span>10:00</span><span>14:00</span><span>18:00</span><span>22:00</span><span>23:00</span></div>
   <h3 style="margin:1rem 0 .5rem;font-size:.95rem">此時進行中的課</h3>
   <div class="live-list" id="liveList"></div>
+</section>
+
+<section class="map-section" id="mapSection" aria-label="道館地圖">
+  <h2>道館地圖 · 以 Taiwanogi 為中心</h2>
+  <p class="map-hint">標記顏色＝捷運方便度（紫★＝Taiwanogi 基準 · 綠 easy · 黃 ok · 紅 hard）。下方篩選／最遠 km／道館會同步地圖。同址重疊會微調顯示。點標記可開課表。</p>
+  <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
 </section>
 
 <div class="controls">
@@ -608,12 +667,13 @@ function accessLabel(a) {
   return ({easy:"捷運方便",ok:"尚可",hard:"較遠／多轉"})[a] || a;
 }
 function distLine(g) {
-  if (g.km == null) return "";
+  if (g.km == null && g.transitMin == null) return "";
+  const km = g.km != null ? g.km : "?";
+  const mins = g.transitMin != null ? g.transitMin : "?";
+  const parts = [`距離 ${km} km`, `預估 ${mins} 分`];
   const walk = g.walkMin != null ? `步行${g.walkMin}分` : "";
   const mrt = g.mrt ? `捷運${g.mrt}` : "";
-  const parts = [`${g.km} km`];
   if (mrt || walk) parts.push([mrt, walk].filter(Boolean).join(" "));
-  if (g.transitMin != null && g.id !== "taiwannogi") parts.push(`約${g.transitMin}分`);
   return parts.join(" · ");
 }
 function gymsOrdered() {
@@ -681,6 +741,91 @@ function typeLabel(t) {
 function activeAt(day, min) {
   return INTERVALS.filter(iv => iv.d === day && iv.start <= min && min < iv.end);
 }
+
+
+let gymMap = null;
+let gymMarkers = {};
+const BASE = GYMS.find(g => g.id === "taiwannogi");
+
+function pinIcon(g) {
+  const cls = g.id === "taiwannogi" ? "base" : (g.access || "ok");
+  const label = g.id === "taiwannogi" ? "★" : "";
+  return L.divIcon({
+    className: "",
+    html: `<div class="map-pin ${cls}"><span>${label}</span></div>`,
+    iconSize: g.id === "taiwannogi" ? [34, 34] : [28, 28],
+    iconAnchor: g.id === "taiwannogi" ? [17, 30] : [14, 26],
+    popupAnchor: [0, -22]
+  });
+}
+
+function initMap() {
+  if (gymMap || typeof L === "undefined") return;
+  gymMap = L.map("gymMap", { scrollWheelZoom: false, zoomControl: true });
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 19
+  }).addTo(gymMap);
+  gymMap.setView([BASE.lat, BASE.lng], 11);
+  gymMap.on("click", () => { /* allow focus */ });
+  // enable scroll zoom after user focuses map
+  gymMap.once("focus", () => gymMap.scrollWheelZoom.enable());
+  document.getElementById("gymMap").addEventListener("mouseenter", () => gymMap.scrollWheelZoom.enable());
+  document.getElementById("gymMap").addEventListener("mouseleave", () => gymMap.scrollWheelZoom.disable());
+  updateMap();
+  setTimeout(() => gymMap.invalidateSize(), 80);
+}
+
+function mapGymList() {
+  let list = gymsOrdered();
+  if (state.gym !== "all") list = list.filter(g => g.id === state.gym);
+  // always keep Taiwanogi visible as reference when filtering by access/km, unless explicitly filtered out by gym select
+  if (state.gym === "all" && !list.some(g => g.id === "taiwannogi") && BASE) {
+    list = [BASE, ...list];
+  }
+  return list.filter(g => g.lat != null && g.lng != null);
+}
+
+function updateMap() {
+  if (!gymMap) return;
+  Object.values(gymMarkers).forEach(m => gymMap.removeLayer(m));
+  gymMarkers = {};
+  const list = mapGymList();
+  const bounds = [];
+  const seen = {};
+  list.forEach(g => {
+    let lat = g.lat, lng = g.lng;
+    const key = lat.toFixed(5) + "," + lng.toFixed(5);
+    if (seen[key] != null) {
+      // nudge overlapping addresses (e.g. 海山／台巴·海山) so both pins are clickable
+      const n = ++seen[key];
+      lat += 0.0012 * n;
+      lng += 0.0012 * n;
+    } else {
+      seen[key] = 0;
+    }
+    const popup = `<div class="pop-name">${g.name}</div>
+      <div class="pop-meta">${g.district} · <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></div>
+      <div class="pop-meta">${distLine(g)}</div>
+      <div class="pop-meta">${g.mrt ? "捷運"+g.mrt+(g.walkMin!=null?" 步行"+g.walkMin+"分":"") : ""}</div>
+      <div class="pop-meta">${g.address || ""}</div>
+      <button type="button" data-open="${g.id}">看課表詳情</button>`;
+    const marker = L.marker([lat, lng], { icon: pinIcon(g), title: g.name })
+      .addTo(gymMap)
+      .bindPopup(popup);
+    marker.on("popupopen", () => {
+      const btn = document.querySelector(`.leaflet-popup-content button[data-open="${g.id}"]`);
+      if (btn) btn.onclick = (e) => { e.stopPropagation(); showDetail(g.id); };
+    });
+    gymMarkers[g.id] = marker;
+    bounds.push([lat, lng]);
+  });
+  if (bounds.length === 1) gymMap.setView(bounds[0], 13);
+  else if (bounds.length > 1) gymMap.fitBounds(bounds, { padding: [36, 36], maxZoom: 13 });
+  setTimeout(() => gymMap.invalidateSize(), 50);
+}
+
 
 function updateScrubber() {
   const day = state.scrubDay;
@@ -847,6 +992,7 @@ function render() {
   document.getElementById("matrixView").style.display = state.view === "matrix" ? "" : "none";
   document.getElementById("cardsView").style.display = state.view === "cards" ? "" : "none";
   document.getElementById("dayView").style.display = state.view === "day" ? "" : "none";
+  updateMap();
 }
 
 const gf = document.getElementById("gymFilter");
@@ -896,6 +1042,7 @@ document.body.addEventListener("click", e => {
 
 updateScrubber();
 render();
+initMap();
 </script>
 </body>
 </html>
