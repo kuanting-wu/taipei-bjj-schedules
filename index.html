@@ -591,13 +591,31 @@
     box-shadow: 0 0 6px #ef4444; pointer-events: none; transform: translateX(-1px);
   }
 
+  .stats-modes-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: .4rem .75rem; margin: .15rem 0 .55rem;
+  }
   .stats-modes {
-    display: flex; flex-wrap: wrap; gap: .3rem; margin: .15rem 0 .55rem;
+    display: flex; flex-wrap: wrap; gap: .3rem; margin: 0;
   }
   .stats-modes .chip {
     font-size: .72rem; padding: .22rem .55rem; font-weight: 600;
   }
   .stats-modes .chip.on { outline-color: var(--accent); }
+  .stats-unit {
+    display: inline-flex; align-items: center; gap: 0;
+    border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
+    background: #0f1419; flex: 0 0 auto;
+  }
+  .stats-unit button {
+    border: none; background: transparent; color: var(--muted);
+    font-size: .72rem; font-weight: 700; padding: .22rem .55rem; cursor: pointer;
+  }
+  .stats-unit button.on {
+    background: #243044; color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .stats-unit button:hover { color: var(--text); }
   .stats-charts { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 10rem; }
   .chart-block {
     margin: .15rem 0 0; flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0;
@@ -744,12 +762,18 @@
     </div>
     <div class="compose" id="composeBar" aria-hidden="true"></div>
     <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
-    <div class="stats-modes chips" id="statsModes" role="tablist" aria-label="統計模式">
-      <button type="button" class="chip on" data-stat-mode="types" title="所選時刻（或全日）課型分布">課型</button>
-      <button type="button" class="chip" data-stat-mode="timeline" title="全日各時段課型占比曲線">時序</button>
-      <button type="button" class="chip" data-stat-mode="rival" title="近距對手 vs 其餘">近距</button>
-      <button type="button" class="chip" data-stat-mode="gyms" title="各館堂數（多→少）">道館</button>
-      <button type="button" class="chip" data-stat-mode="heat" title="星期 × 時段熱力（精簡）">熱力</button>
+    <div class="stats-modes-row">
+      <div class="stats-modes chips" id="statsModes" role="tablist" aria-label="統計模式">
+        <button type="button" class="chip on" data-stat-mode="types" title="所選時刻（或全日）課型分布">課型</button>
+        <button type="button" class="chip" data-stat-mode="timeline" title="全日各時段課型曲線">時序</button>
+        <button type="button" class="chip" data-stat-mode="rival" title="近距對手 vs 其餘">近距</button>
+        <button type="button" class="chip" data-stat-mode="gyms" title="各館堂數（多→少）">道館</button>
+        <button type="button" class="chip" data-stat-mode="heat" title="星期 × 時段熱力（精簡）">熱力</button>
+      </div>
+      <div class="stats-unit" id="statsUnit" role="group" aria-label="圖表單位">
+        <button type="button" class="on" data-stat-unit="pct" title="以百分比顯示（所有模式）">佔比</button>
+        <button type="button" data-stat-unit="count" title="以堂數顯示（所有模式）">數量</button>
+      </div>
     </div>
     <div class="stats-charts">
       <div class="chart-block">
@@ -1359,7 +1383,8 @@ const state = {
   scrubMin: null, // null = no selected time (cleared on load)
   sortBy: "transitMin", access: "all", maxKm: 0,
   gymsAtNow: false, slotsAtNow: false,
-  statMode: "types"
+  statMode: "types",
+  statUnit: "pct" // pct | count — applies to all chart modes
 };
 function hasScrubTime() { return state.scrubMin != null && Number.isFinite(state.scrubMin); }
 /** Reliable Asia/Taipei wall-clock parts (avoids locale Date parse quirks). */
@@ -1597,9 +1622,12 @@ function updateTimeMark() {
   mark.style.left = (pct * 100) + "%";
 }
 
-function barRow(fillClass, lab, n, total) {
-  const pct = total ? Math.round(n / total * 100) : 0;
-  return `<div class="bar-row"><span class="lab" title="${lab}">${lab}</span><div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div><span class="n">${n}</span></div>`;
+function isStatPct() { return state.statUnit !== "count"; }
+function barRow(fillClass, lab, n, denom) {
+  const pct = denom ? Math.round(n / denom * 100) : 0;
+  const shown = isStatPct() ? (pct + "%") : String(n);
+  const tip = lab + " · " + n + " 堂 · " + pct + "%";
+  return `<div class="bar-row"><span class="lab" title="${tip}">${lab}</span><div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div><span class="n" title="${tip}">${shown}</span></div>`;
 }
 
 /** Intervals for charts: at selected time, or all filtered (ignore slotsAtNow) */
@@ -1638,13 +1666,15 @@ function statsIntervalsDay() {
   });
 }
 
-/** SVG line chart: type composition % across hourly buckets (06–22). */
+/** SVG line chart: type composition across hourly buckets (06–22). Unit = pct|count. */
 function renderTimelineChart(host) {
   const hours = [];
   for (let h = 6; h <= 22; h++) hours.push(h);
   const base = statsIntervalsDay();
+  const asPct = isStatPct();
   const series = { gi: [], nogi: [], roll: [], unknown: [] };
   const totals = [];
+  let maxCount = 0;
   hours.forEach(h => {
     const a = h * 60, b = (h + 1) * 60;
     const hit = base.filter(iv => iv.start < b && iv.end > a);
@@ -1652,18 +1682,36 @@ function renderTimelineChart(host) {
     hit.forEach(iv => { if (c[iv.t] != null) c[iv.t]++; else c.unknown++; });
     const tot = c.gi + c.nogi + c.roll + c.unknown;
     totals.push({ h, tot, ...c });
+    maxCount = Math.max(maxCount, c.gi, c.nogi, c.roll, c.unknown);
     const pct = (n) => tot ? (n / tot) * 100 : 0;
-    series.gi.push(pct(c.gi));
-    series.nogi.push(pct(c.nogi));
-    series.roll.push(pct(c.roll));
-    series.unknown.push(pct(c.unknown));
+    if (asPct) {
+      series.gi.push(pct(c.gi));
+      series.nogi.push(pct(c.nogi));
+      series.roll.push(pct(c.roll));
+      series.unknown.push(pct(c.unknown));
+    } else {
+      series.gi.push(c.gi);
+      series.nogi.push(c.nogi);
+      series.roll.push(c.roll);
+      series.unknown.push(c.unknown);
+    }
   });
+
+  const yMax = asPct ? 100 : Math.max(1, maxCount);
+  // nice ticks for counts
+  const yTicks = asPct ? [0, 25, 50, 75, 100] : (() => {
+    const step = yMax <= 4 ? 1 : yMax <= 10 ? 2 : yMax <= 20 ? 5 : Math.ceil(yMax / 4);
+    const out = [];
+    for (let v = 0; v <= yMax; v += step) out.push(v);
+    if (out[out.length - 1] !== yMax) out.push(yMax);
+    return out;
+  })();
 
   const W = 340, H = 168;
   const pad = { l: 34, r: 10, t: 14, b: 28 };
   const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
   const xAt = (i) => pad.l + (hours.length <= 1 ? iw / 2 : (i / (hours.length - 1)) * iw);
-  const yAt = (pct) => pad.t + ih - (pct / 100) * ih;
+  const yAt = (v) => pad.t + ih - (v / yMax) * ih;
   const colors = { gi: "#3b82f6", nogi: "#22c55e", roll: "#f59e0b", unknown: "#94a3b8" };
   const labels = { gi: "Gi", nogi: "No-Gi", roll: "Rolling", unknown: "未分類" };
 
@@ -1672,17 +1720,18 @@ function renderTimelineChart(host) {
     let out = '<polyline fill="none" stroke="' + colors[key] + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="' + pts + '" />';
     series[key].forEach((v, i) => {
       const t = totals[i];
-      const tip = String(t.h).padStart(2, "0") + ":00 · " + labels[key] + " " + Math.round(v) + "%（" + t[key] + "／" + t.tot + "）";
+      const share = t.tot ? Math.round(t[key] / t.tot * 100) : 0;
+      const tip = String(t.h).padStart(2, "0") + ":00 · " + labels[key] + " " + t[key] + " 堂（" + share + "%）";
       out += '<circle cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(v).toFixed(1) + '" r="2.4" fill="' + colors[key] + '"><title>' + tip + '</title></circle>';
     });
     return out;
   }
 
   let grid = "";
-  [0, 25, 50, 75, 100].forEach(p => {
+  yTicks.forEach(p => {
     const y = yAt(p);
     grid += '<line x1="' + pad.l + '" y1="' + y + '" x2="' + (W - pad.r) + '" y2="' + y + '" stroke="#2d3a4d" stroke-width="1" />';
-    grid += '<text x="' + (pad.l - 4) + '" y="' + (y + 3) + '" text-anchor="end" fill="#8b9bb4" font-size="9">' + p + '%</text>';
+    grid += '<text x="' + (pad.l - 4) + '" y="' + (y + 3) + '" text-anchor="end" fill="#8b9bb4" font-size="9">' + p + (asPct ? "%" : "") + '</text>';
   });
   hours.forEach((h, i) => {
     if (i % 2 !== 0 && i !== hours.length - 1) return;
@@ -1705,16 +1754,18 @@ function renderTimelineChart(host) {
   const legend = ["gi", "nogi", "roll", "unknown"].map(k =>
     '<span><i class="' + (k === "unknown" ? "unk" : k) + '"></i>' + labels[k] + "</span>"
   ).join("");
+  const yLab = asPct ? "Y＝該時段內課型占比" : "Y＝該時段內堂數";
 
   host.innerHTML = '<div class="line-chart-wrap">'
-    + '<svg class="line-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="課型占比時序圖">'
+    + '<svg class="line-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="課型時序圖">'
     + '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#0f1419" rx="8" />'
     + grid + poly("gi") + poly("nogi") + poly("roll") + poly("unknown") + nowMark
     + '</svg>'
     + '<div class="line-legend">' + legend + '</div>'
-    + '<p class="line-meta">' + dayLab + ' · 小時桶 06–22 · Y＝該時段內課型占比 · 共 ' + base.length + ' 堂（篩選後）</p>'
+    + '<p class="line-meta">' + dayLab + ' · 小時桶 06–22 · ' + yLab + ' · 共 ' + base.length + ' 堂（篩選後）</p>'
     + '</div>';
 }
+
 
 function renderCharts(actAtTime) {
   const titleEl = document.getElementById("chartTitle");
@@ -1734,12 +1785,17 @@ function renderCharts(actAtTime) {
   document.querySelectorAll("#statsModes [data-stat-mode]").forEach(btn => {
     btn.classList.toggle("on", btn.dataset.statMode === mode);
   });
+  document.querySelectorAll("#statsUnit [data-stat-unit]").forEach(btn => {
+    btn.classList.toggle("on", btn.dataset.statUnit === (isStatPct() ? "pct" : "count"));
+  });
 
   if (mode === "heat") {
     main.style.display = "none";
     if (heatWrap) heatWrap.style.display = "";
     titleEl.textContent = "星期 × 時段熱力";
-    if (subEl) subEl.textContent = "依篩選課表；色深＝堂數多（精簡 6 時段）";
+    if (subEl) subEl.textContent = isStatPct()
+      ? "依篩選課表；色深＝相對占比高（精簡 6 時段）· 顯示佔比"
+      : "依篩選課表；色深＝堂數多（精簡 6 時段）· 顯示數量";
     const buckets = [
       ["上午早", 360, 540],
       ["上午", 540, 720],
@@ -1783,21 +1839,34 @@ function renderCharts(actAtTime) {
       html += `<div class="hd">${d}</div>`;
       buckets.forEach((_, bi) => {
         const n = counts[d + "|" + bi] || 0;
-        html += `<div class="heat-cell" data-n="${n}" title="星期${d} ${buckets[bi][0]}：${n} 堂" style="background:${heatColor(n)}"></div>`;
+        const share = base.length ? Math.round(n / base.length * 100) : 0;
+        const tip = isStatPct()
+          ? `星期${d} ${buckets[bi][0]}：${share}%（${n}／${base.length}）`
+          : `星期${d} ${buckets[bi][0]}：${n} 堂`;
+        html += `<div class="heat-cell" data-n="${n}" title="${tip}" style="background:${heatColor(n)}"></div>`;
       });
     });
     if (heat) heat.innerHTML = html;
-    if (heatLeg) heatLeg.textContent = maxN ? `最深＝${maxN} 堂／格 · 共 ${base.length} 堂` : "無資料";
+    if (heatLeg) {
+      if (!maxN) heatLeg.textContent = "無資料";
+      else if (isStatPct()) {
+        const topShare = base.length ? Math.round(maxN / base.length * 100) : 0;
+        heatLeg.textContent = `最深≈${topShare}%（${maxN} 堂／格）· 共 ${base.length} 堂 · 單位＝佔比`;
+      } else {
+        heatLeg.textContent = `最深＝${maxN} 堂／格 · 共 ${base.length} 堂 · 單位＝數量`;
+      }
+    }
     return;
   }
 
   if (mode === "timeline") {
     if (heatWrap) heatWrap.style.display = "none";
     main.style.display = "";
-    titleEl.textContent = "課型占比 · 時序";
+    titleEl.textContent = isStatPct() ? "課型占比 · 時序" : "課型數量 · 時序";
     if (subEl) {
       subEl.textContent = (state.day === "all" ? "一～日同時段合計" : ("星期" + state.day))
-        + " · 尊重道館／類型／搜尋／方便度篩選 · 曲線＝各時段占比";
+        + " · 尊重道館／類型／搜尋／方便度篩選 · 曲線＝"
+        + (isStatPct() ? "各時段占比" : "各時段堂數");
     }
     renderTimelineChart(main);
     return;
@@ -1814,7 +1883,7 @@ function renderCharts(actAtTime) {
 
   if (mode === "types") {
     titleEl.textContent = "課型分布";
-    if (subEl) subEl.textContent = scope;
+    if (subEl) subEl.textContent = scope + (isStatPct() ? " · 佔比" : " · 數量");
     const counts = {
       gi: pool.filter(x => x.t === "gi").length,
       nogi: pool.filter(x => x.t === "nogi").length,
@@ -1833,7 +1902,7 @@ function renderCharts(actAtTime) {
 
   if (mode === "rival") {
     titleEl.textContent = "近距對手 vs 其餘";
-    if (subEl) subEl.textContent = scope + "（不含 Taiwanogi）";
+    if (subEl) subEl.textContent = scope + "（不含 Taiwanogi）" + (isStatPct() ? " · 佔比" : " · 數量");
     let nRival = 0, nFar = 0;
     pool.forEach(iv => {
       const g = gymById[iv.g];
@@ -1849,8 +1918,8 @@ function renderCharts(actAtTime) {
   }
 
   if (mode === "gyms") {
-    titleEl.textContent = "各館堂數";
-    if (subEl) subEl.textContent = scope + " · 前 12";
+    titleEl.textContent = isStatPct() ? "各館占比" : "各館堂數";
+    if (subEl) subEl.textContent = scope + " · 前 12" + (isStatPct() ? " · 佔比" : " · 數量");
     const by = {};
     pool.forEach(iv => { by[iv.g] = (by[iv.g] || 0) + 1; });
     const rows = Object.entries(by)
@@ -1859,24 +1928,37 @@ function renderCharts(actAtTime) {
       .sort((a, b) => b.n - a.n || a.g.name.localeCompare(b.g.name, "zh-Hant"))
       .slice(0, 12);
     const maxN = rows[0] ? rows[0].n : 1;
+    const denom = isStatPct() ? Math.max(1, pool.length) : maxN;
     main.innerHTML = rows.map(({ n, g }) => {
       const short = g.name.replace(/^台巴[·・]/g, "").replace(/^UFC GYM /, "UFC ");
       const cls = isRival(g) ? "gym rival" : (isBase(g) ? "gym" : "gym");
-      return barRow(cls, short, n, maxN);
+      return barRow(cls, short, n, denom);
     }).join("");
   }
 }
 
 function initStatModes() {
   const store = "bjj-stat-mode-v1";
+  const unitStore = "bjj-stat-unit-v1";
   try {
     const saved = localStorage.getItem(store);
     if (["types", "timeline", "rival", "gyms", "heat"].includes(saved)) state.statMode = saved;
+  } catch (_) {}
+  try {
+    const u = localStorage.getItem(unitStore);
+    if (u === "pct" || u === "count") state.statUnit = u;
   } catch (_) {}
   document.querySelectorAll("#statsModes [data-stat-mode]").forEach(btn => {
     btn.onclick = () => {
       state.statMode = btn.dataset.statMode;
       try { localStorage.setItem(store, state.statMode); } catch (_) {}
+      updateScrubber();
+    };
+  });
+  document.querySelectorAll("#statsUnit [data-stat-unit]").forEach(btn => {
+    btn.onclick = () => {
+      state.statUnit = btn.dataset.statUnit === "count" ? "count" : "pct";
+      try { localStorage.setItem(unitStore, state.statUnit); } catch (_) {}
       updateScrubber();
     };
   });
