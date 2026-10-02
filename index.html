@@ -3,39 +3,70 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>大台北柔術課表 · Gi / No-Gi / Rolling</title>
+<title>大台北柔術課表 · 時間軸統計</title>
 <style>
   :root {
-    --bg: #0f1419;
-    --card: #1a2332;
-    --border: #2d3a4d;
-    --text: #e7ecf3;
-    --muted: #8b9bb4;
-    --gi: #3b82f6;
-    --nogi: #22c55e;
-    --roll: #f59e0b;
-    --accent: #a78bfa;
+    --bg: #0f1419; --card: #1a2332; --border: #2d3a4d; --text: #e7ecf3;
+    --muted: #8b9bb4; --gi: #3b82f6; --nogi: #22c55e; --roll: #f59e0b; --accent: #a78bfa;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    background: var(--bg); color: var(--text); line-height: 1.45;
-  }
-  header {
-    padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, #1a2332, var(--bg));
-  }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; }
+  header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, #1a2332, var(--bg)); }
   header h1 { margin: 0 0 .35rem; font-size: 1.35rem; }
   header p { margin: 0; color: var(--muted); font-size: .9rem; }
+  .scrubber {
+    margin: 1rem 1.5rem; padding: 1.1rem 1.25rem; background: var(--card);
+    border: 1px solid var(--border); border-radius: 14px;
+  }
+  .scrubber-top { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; justify-content: space-between; }
+  .scrubber label { font-size: .8rem; color: var(--muted); display: flex; flex-direction: column; gap: .3rem; }
+  select, input[type="search"] {
+    background: #0f1419; color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: .45rem .65rem; min-width: 120px;
+  }
+  .now-clock { font-size: 1.75rem; font-weight: 700; letter-spacing: .02em; }
+  .now-clock span { color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; margin: 1rem 0 .75rem; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: #0f1419; border: 1px solid var(--border); border-radius: 10px; padding: .75rem;
+    text-align: center;
+  }
+  .stat .n { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+  .stat .l { font-size: .75rem; color: var(--muted); margin-top: .25rem; }
+  .stat.gi .n { color: var(--gi); }
+  .stat.nogi .n { color: var(--nogi); }
+  .stat.roll .n { color: var(--roll); }
+  .compose {
+    height: 14px; border-radius: 999px; overflow: hidden; display: flex; background: #0f1419;
+    border: 1px solid var(--border); margin-bottom: .5rem;
+  }
+  .compose > i { display: block; height: 100%; }
+  .compose .gi { background: var(--gi); }
+  .compose .nogi { background: var(--nogi); }
+  .compose .roll { background: var(--roll); }
+  .compose-legend { font-size: .75rem; color: var(--muted); margin-bottom: .85rem; }
+  input[type="range"] {
+    width: 100%; accent-color: var(--accent); cursor: pointer; height: 1.5rem;
+  }
+  .tick-row { display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); margin-top: .15rem; }
+  .live-list { max-height: 220px; overflow: auto; display: grid; gap: .4rem; }
+  .live-item {
+    display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline;
+    padding: .45rem .6rem; border-radius: 8px; background: #0f1419; border: 1px solid var(--border);
+    font-size: .85rem; cursor: pointer;
+  }
+  .live-item:hover { border-color: var(--accent); }
+  .badge { font-size: .7rem; padding: .1rem .4rem; border-radius: 999px; border: 1px solid; }
+  .badge.gi { color: #93c5fd; border-color: var(--gi); }
+  .badge.nogi { color: #86efac; border-color: var(--nogi); }
+  .badge.roll { color: #fcd34d; border-color: var(--roll); }
+  .badge.unknown { color: var(--muted); border-color: var(--border); }
   .controls {
     display: flex; flex-wrap: wrap; gap: .75rem; padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border); align-items: center;
   }
   .controls label { font-size: .8rem; color: var(--muted); display: flex; flex-direction: column; gap: .25rem; }
-  select, input[type="search"] {
-    background: var(--card); color: var(--text); border: 1px solid var(--border);
-    border-radius: 8px; padding: .45rem .65rem; min-width: 140px;
-  }
   .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
   .chip {
     border: 1px solid var(--border); background: var(--card); color: var(--text);
@@ -45,13 +76,10 @@
   .chip.gi.on { outline-color: var(--gi); }
   .chip.nogi.on { outline-color: var(--nogi); }
   .chip.roll.on { outline-color: var(--roll); }
-  .legend { display: flex; gap: .75rem; flex-wrap: wrap; font-size: .8rem; color: var(--muted); }
   .dot { width: .65rem; height: .65rem; border-radius: 50%; display: inline-block; margin-right: .25rem; }
-  .dot.gi { background: var(--gi); }
-  .dot.nogi { background: var(--nogi); }
-  .dot.roll { background: var(--roll); }
+  .dot.gi { background: var(--gi); } .dot.nogi { background: var(--nogi); } .dot.roll { background: var(--roll); }
   main { padding: 1rem 1.5rem 3rem; }
-  .view-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; }
+  .view-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
   .view-tabs button {
     background: var(--card); border: 1px solid var(--border); color: var(--text);
     padding: .5rem 1rem; border-radius: 8px; cursor: pointer;
@@ -59,13 +87,9 @@
   .view-tabs button.active { background: #2a3550; border-color: var(--accent); }
   .matrix-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
   table.matrix { border-collapse: collapse; width: 100%; min-width: 900px; font-size: .82rem; }
-  table.matrix th, table.matrix td {
-    border: 1px solid var(--border); padding: .5rem; vertical-align: top;
-    background: var(--card);
-  }
+  table.matrix th, table.matrix td { border: 1px solid var(--border); padding: .5rem; vertical-align: top; background: var(--card); }
   table.matrix th { position: sticky; top: 0; z-index: 2; background: #243044; }
-  table.matrix th.day { left: 0; z-index: 3; min-width: 3.2rem; }
-  table.matrix td.day { position: sticky; left: 0; background: #1e293b; font-weight: 600; }
+  table.matrix th.day, table.matrix td.day { position: sticky; left: 0; z-index: 3; background: #1e293b; font-weight: 600; min-width: 3.2rem; }
   .slot { margin: .2rem 0; padding: .25rem .4rem; border-radius: 6px; font-size: .78rem; }
   .slot.gi { background: rgba(59,130,246,.2); border-left: 3px solid var(--gi); }
   .slot.nogi { background: rgba(34,197,94,.2); border-left: 3px solid var(--nogi); }
@@ -73,10 +97,7 @@
   .slot.unknown { background: rgba(139,155,180,.15); border-left: 3px solid var(--muted); }
   .empty { color: var(--muted); }
   .gym-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-  .gym-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 1rem; cursor: pointer; transition: border-color .15s;
-  }
+  .gym-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; cursor: pointer; }
   .gym-card:hover { border-color: var(--accent); }
   .gym-card h3 { margin: 0 0 .35rem; font-size: 1.05rem; }
   .gym-card .meta { color: var(--muted); font-size: .85rem; margin-bottom: .75rem; }
@@ -85,16 +106,10 @@
   .tag.gi { color: #93c5fd; border-color: var(--gi); }
   .tag.nogi { color: #86efac; border-color: var(--nogi); }
   .tag.roll { color: #fcd34d; border-color: var(--roll); }
-  #detail {
-    display: none; margin-top: 1.25rem; background: var(--card);
-    border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem;
-  }
+  #detail { display: none; margin-top: 1.25rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
   #detail.open { display: block; }
-  #detail h2 { margin: 0 0 .5rem; }
   #detail .links a { color: var(--accent); margin-right: 1rem; font-size: .9rem; }
-  #detail img {
-    max-width: 100%; border-radius: 8px; border: 1px solid var(--border); margin-top: .75rem;
-  }
+  #detail img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); margin-top: .75rem; }
   .day-list { display: grid; gap: .75rem; }
   .day-block { border: 1px solid var(--border); border-radius: 10px; padding: .75rem 1rem; background: #15202e; }
   .day-block h4 { margin: 0 0 .5rem; }
@@ -104,12 +119,38 @@
 </head>
 <body>
 <header>
-  <h1>大台北柔術課表 · 三維瀏覽</h1>
-  <p>星期 × 道館 × Gi／No-Gi／Rolling　·　資料截至 2026-10-02　·　點格子或卡片看來源與課表圖</p>
+  <h1>大台北柔術課表 · 時間軸統計</h1>
+  <p>拖拉時間軸，看「此刻」有幾堂 Gi／No-Gi／Rolling · 亦可切矩陣／卡片 · 資料截至 2026-10-02</p>
 </header>
 
+<section class="scrubber" id="scrubber">
+  <div class="scrubber-top">
+    <label>看哪一天
+      <select id="scrubDay">
+        <option value="一">星期一</option><option value="二">星期二</option><option value="三">星期三</option>
+        <option value="四" selected>星期四</option><option value="五">星期五</option>
+        <option value="六">星期六</option><option value="日">星期日</option>
+      </select>
+    </label>
+    <div class="now-clock">此刻 <span id="clockLabel">20:40</span></div>
+    <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
+  </div>
+  <div class="stats">
+    <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi 上課中</div></div>
+    <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi 上課中</div></div>
+    <div class="stat roll"><div class="n" id="nRoll">0</div><div class="l">Rolling／Open mat</div></div>
+    <div class="stat"><div class="n" id="nTotal">0</div><div class="l">進行中總堂數</div></div>
+  </div>
+  <div class="compose" id="composeBar" aria-hidden="true"></div>
+  <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling —</div>
+  <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
+  <div class="tick-row"><span>06:00</span><span>10:00</span><span>14:00</span><span>18:00</span><span>22:00</span><span>23:00</span></div>
+  <h3 style="margin:1rem 0 .5rem;font-size:.95rem">此時進行中的課</h3>
+  <div class="live-list" id="liveList"></div>
+</section>
+
 <div class="controls">
-  <label>星期
+  <label>矩陣篩選·星期
     <select id="dayFilter">
       <option value="all">全部</option>
       <option value="一">一</option><option value="二">二</option><option value="三">三</option>
@@ -124,7 +165,7 @@
     <input type="search" id="q" placeholder="滾到飽、open mat…" />
   </label>
   <div>
-    <div class="legend" style="margin-bottom:.35rem">類型（可多選）</div>
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:.35rem">類型</div>
     <div class="chips">
       <button type="button" class="chip gi on" data-type="gi"><span class="dot gi"></span>Gi</button>
       <button type="button" class="chip nogi on" data-type="nogi"><span class="dot nogi"></span>No-Gi</button>
@@ -147,104 +188,41 @@
 </main>
 
 <footer>
-  來源為各館官網／IG／FB 公開課表；時段可能異動，請以道館最新公告為準。
-  專案：<a href="https://github.com/kuanting-wu/taipei-bjj-schedules" id="repoLink">GitHub</a>
+  來源為各館官網／IG／FB 公開課表；時間軸統計依解析後的時段重疊計算，僅供參考。
+  <a href="https://github.com/kuanting-wu/taipei-bjj-schedules">GitHub</a> ·
+  <a href="https://kuanting-wu.github.io/taipei-bjj-schedules/">Pages</a>
 </footer>
 
 <script>
 const DAYS = ["一","二","三","四","五","六","日"];
-
 const GYMS = [
-  {
-    id: "taiwannogi",
-    name: "Taiwanogi",
-    district: "大安",
-    sources: [
-      { label: "IG 課表", url: "https://www.instagram.com/taiwannogi/p/DdwXbzvRsUS/" },
-      { label: "官網", url: "https://www.taiwannogi.com/" },
-      { label: "課表圖直連", url: "https://images.squarespace-cdn.com/content/v1/662f7814966d1f3bf331af4a/ba39b56e-ad08-4170-ade9-2f922ada42dc/New+Schedule+%284%29.png" }
-    ],
-    image: "taiwannogi_october_schedule_clear.png",
-    note: "週四滾到飽 NEW；幾乎全 No-Gi"
-  },
-  {
-    id: "10thplanet",
-    name: "10th Planet Taipei",
-    district: "松山",
-    sources: [
-      { label: "官網課表", url: "https://www.10thplanettaipei.com/schedule" }
-    ],
-    image: null,
-    note: "全館 No-Gi；無獨立 open mat"
-  },
-  {
-    id: "wristlock",
-    name: "腕鎖（土城）",
-    district: "新北土城",
-    sources: [
-      { label: "官網", url: "https://wristlockjiujitsu.com/" },
-      { label: "台巴頁", url: "https://taiwanbjj.org/zh/腕鎖柔術學院/" },
-      { label: "IG seminar", url: "https://www.instagram.com/wristlockjiujitsu/p/Dd3iYvoT2QF/" }
-    ],
-    image: "wristlock_nov1_2026_gi_seminar_clear.png",
-    note: "週課表依官網／Way of Yawara 讀取之 2026-03 圖；IG 最新為 seminar"
-  },
-  {
-    id: "wuja",
-    name: "武甲",
-    district: "大直／古亭／永和",
-    sources: [
-      { label: "官網週曆", url: "https://www.wu-ja.com/" },
-      { label: "IG 永和", url: "https://www.instagram.com/martial_armour/p/DbX21UGnfJv/" }
-    ],
-    image: "wuja_yonghe_schedule_clear.png",
-    note: "「開放自主對打」未必純 BJJ；永和圖無 open mat"
-  },
-  {
-    id: "pma",
-    name: "PMA 台北",
-    district: "中山",
-    sources: [
-      { label: "IG 課表", url: "https://www.instagram.com/pmabjjtaipei/p/DdyJbPPosJu/" }
-    ],
-    image: "pma_taipei_october_schedule_clear.png",
-    note: ""
-  },
-  {
-    id: "dfa",
-    name: "DFA 降龍",
-    district: "中正",
-    sources: [
-      { label: "IG 課表", url: "https://www.instagram.com/dragonfightart/p/Dd6i9y_NgRQ/" }
-    ],
-    image: "dfa_october_2026_schedule_clear.png",
-    note: "BJJ 班未標 Gi/No-Gi"
-  },
-  {
-    id: "haishan",
-    name: "巴柔海山",
-    district: "新北土城",
-    sources: [
-      { label: "IG 體驗課表", url: "https://www.instagram.com/taiwanbjj_hs/p/DcQrXDou5Ye/" }
-    ],
-    image: "taiwanbjj_haishan_schedule_clear.png",
-    note: "體驗課表；非完整會員週格"
-  },
-  {
-    id: "shuraba",
-    name: "修羅場",
-    district: "板橋",
-    sources: [
-      { label: "Facebook", url: "https://www.facebook.com/SRBMMA" }
-    ],
-    image: "shuraba_facebook_schedule_update.png",
-    note: "週五已改 MMA 初學者班"
-  }
+  { id:"taiwannogi", name:"Taiwanogi", district:"大安",
+    sources:[{label:"IG 課表",url:"https://www.instagram.com/taiwannogi/p/DdwXbzvRsUS/"},{label:"官網",url:"https://www.taiwannogi.com/"},{label:"課表圖",url:"https://images.squarespace-cdn.com/content/v1/662f7814966d1f3bf331af4a/ba39b56e-ad08-4170-ade9-2f922ada42dc/New+Schedule+%284%29.png"}],
+    image:"taiwannogi_october_schedule_clear.png", note:"週四滾到飽 NEW；幾乎全 No-Gi" },
+  { id:"10thplanet", name:"10th Planet Taipei", district:"松山",
+    sources:[{label:"官網課表",url:"https://www.10thplanettaipei.com/schedule"}],
+    image:null, note:"全館 No-Gi；無獨立 open mat" },
+  { id:"wristlock", name:"腕鎖（土城）", district:"新北土城",
+    sources:[{label:"官網",url:"https://wristlockjiujitsu.com/"},{label:"IG seminar",url:"https://www.instagram.com/wristlockjiujitsu/p/Dd3iYvoT2QF/"}],
+    image:"wristlock_nov1_2026_gi_seminar_clear.png", note:"週課表依 2026-03 圖彙整" },
+  { id:"wuja", name:"武甲", district:"大直／古亭／永和",
+    sources:[{label:"官網",url:"https://www.wu-ja.com/"},{label:"IG 永和",url:"https://www.instagram.com/martial_armour/p/DbX21UGnfJv/"}],
+    image:"wuja_yonghe_schedule_clear.png", note:"自主對打未必純 BJJ" },
+  { id:"pma", name:"PMA 台北", district:"中山",
+    sources:[{label:"IG 課表",url:"https://www.instagram.com/pmabjjtaipei/p/DdyJbPPosJu/"}],
+    image:"pma_taipei_october_schedule_clear.png", note:"" },
+  { id:"dfa", name:"DFA 降龍", district:"中正",
+    sources:[{label:"IG 課表",url:"https://www.instagram.com/dragonfightart/p/Dd6i9y_NgRQ/"}],
+    image:"dfa_october_2026_schedule_clear.png", note:"BJJ 班未標 Gi/No-Gi" },
+  { id:"haishan", name:"巴柔海山", district:"新北土城",
+    sources:[{label:"IG",url:"https://www.instagram.com/taiwanbjj_hs/p/DcQrXDou5Ye/"}],
+    image:"taiwanbjj_haishan_schedule_clear.png", note:"體驗課表" },
+  { id:"shuraba", name:"修羅場", district:"板橋",
+    sources:[{label:"Facebook",url:"https://www.facebook.com/SRBMMA"}],
+    image:"shuraba_facebook_schedule_update.png", note:"" }
 ];
 
-/** slots: { gymId, day, type: gi|nogi|roll|unknown, time, title } */
 const SLOTS = [
-  // Taiwanogi
   {g:"taiwannogi",d:"一",t:"roll",time:"12:30–13:30",title:"高階選手對練（需邀請）"},
   {g:"taiwannogi",d:"一",t:"nogi",time:"19:30–20:40",title:"無道袍巴柔 全級別"},
   {g:"taiwannogi",d:"一",t:"roll",time:"20:40–21:40",title:"巴柔對練 OPEN MAT"},
@@ -256,16 +234,15 @@ const SLOTS = [
   {g:"taiwannogi",d:"三",t:"gi",time:"18:30–19:30",title:"道袍巴柔"},
   {g:"taiwannogi",d:"三",t:"nogi",time:"19:30–20:40",title:"無道袍全級別"},
   {g:"taiwannogi",d:"三",t:"roll",time:"20:40–21:40",title:"OPEN MAT"},
-  {g:"taiwannogi",d:"三",t:"nogi",time:"21:40–",title:"進階無道袍（藍帶↑）"},
+  {g:"taiwannogi",d:"三",t:"nogi",time:"21:40–22:40",title:"進階無道袍（藍帶↑）"},
   {g:"taiwannogi",d:"四",t:"roll",time:"12:30–13:30",title:"高階選手對練（需邀請）"},
   {g:"taiwannogi",d:"四",t:"unknown",time:"19:00–19:30",title:"巴柔入門導覽 NEW"},
   {g:"taiwannogi",d:"四",t:"nogi",time:"19:30–20:40",title:"無道袍（上肢）"},
-  {g:"taiwannogi",d:"四",t:"roll",time:"20:40–22:40",title:"滾到飽 OPEN MAT ALL YOU CAN ROLL ★"},
+  {g:"taiwannogi",d:"四",t:"roll",time:"20:40–22:40",title:"滾到飽 OPEN MAT ★"},
   {g:"taiwannogi",d:"五",t:"nogi",time:"19:30–20:40",title:"WILD CARD"},
   {g:"taiwannogi",d:"五",t:"roll",time:"20:40–21:40",title:"OPEN MAT"},
   {g:"taiwannogi",d:"六",t:"nogi",time:"13:00–14:30",title:"角力精修"},
   {g:"taiwannogi",d:"六",t:"nogi",time:"14:30–15:30",title:"No-Gi Q&A"},
-  // 10th Planet
   {g:"10thplanet",d:"一",t:"nogi",time:"10:30–12:00",title:"No-Gi class"},
   {g:"10thplanet",d:"一",t:"nogi",time:"19:30–21:00",title:"No-Gi class"},
   {g:"10thplanet",d:"二",t:"nogi",time:"19:30–21:00",title:"No-Gi class"},
@@ -274,72 +251,177 @@ const SLOTS = [
   {g:"10thplanet",d:"五",t:"nogi",time:"10:30–12:00",title:"No-Gi class"},
   {g:"10thplanet",d:"五",t:"nogi",time:"19:30–21:00",title:"No-Gi class"},
   {g:"10thplanet",d:"六",t:"nogi",time:"12:00–13:30",title:"Leg lock"},
-  // Wristlock
-  {g:"wristlock",d:"一",t:"gi",time:"12:00／19:00／20:00",title:"道袍基礎／入門／中級"},
-  {g:"wristlock",d:"一",t:"roll",time:"21:00",title:"自由練習"},
-  {g:"wristlock",d:"二",t:"gi",time:"19:00／20:00",title:"道袍入門／中級"},
-  {g:"wristlock",d:"二",t:"roll",time:"21:00",title:"自由練習"},
-  {g:"wristlock",d:"三",t:"gi",time:"12:00／19:00／20:00",title:"道袍"},
-  {g:"wristlock",d:"三",t:"roll",time:"21:00",title:"自由練習"},
-  {g:"wristlock",d:"四",t:"nogi",time:"19:00／20:00",title:"無道袍"},
-  {g:"wristlock",d:"四",t:"roll",time:"21:00",title:"自由練習"},
-  {g:"wristlock",d:"五",t:"gi",time:"12:00／19:00／20:00",title:"道袍"},
-  {g:"wristlock",d:"五",t:"roll",time:"21:00",title:"自由練習"},
-  {g:"wristlock",d:"六",t:"nogi",time:"12:00／13:00",title:"無道袍入門"},
-  {g:"wristlock",d:"日",t:"gi",time:"12:00／13:00",title:"道袍"},
-  // Wu-ja (summary from website + yonghe IG)
-  {g:"wuja",d:"三",t:"roll",time:"15:00·21:00",title:"開放自主對打"},
-  {g:"wuja",d:"三",t:"unknown",time:"19:00–21:00",title:"兒童／巴西柔術初階"},
+  {g:"wristlock",d:"一",t:"gi",time:"12:00–13:00",title:"道袍基礎"},
+  {g:"wristlock",d:"一",t:"gi",time:"19:00–20:00",title:"道袍入門"},
+  {g:"wristlock",d:"一",t:"gi",time:"20:00–21:00",title:"道袍中級"},
+  {g:"wristlock",d:"一",t:"roll",time:"21:00–22:00",title:"自由練習"},
+  {g:"wristlock",d:"二",t:"gi",time:"19:00–20:00",title:"道袍入門"},
+  {g:"wristlock",d:"二",t:"gi",time:"20:00–21:00",title:"道袍中級"},
+  {g:"wristlock",d:"二",t:"roll",time:"21:00–22:00",title:"自由練習"},
+  {g:"wristlock",d:"三",t:"gi",time:"12:00–13:00",title:"道袍基礎"},
+  {g:"wristlock",d:"三",t:"gi",time:"19:00–20:00",title:"道袍入門"},
+  {g:"wristlock",d:"三",t:"gi",time:"20:00–21:00",title:"道袍中級"},
+  {g:"wristlock",d:"三",t:"roll",time:"21:00–22:00",title:"自由練習"},
+  {g:"wristlock",d:"四",t:"nogi",time:"19:00–20:00",title:"無道袍"},
+  {g:"wristlock",d:"四",t:"nogi",time:"20:00–21:00",title:"無道袍"},
+  {g:"wristlock",d:"四",t:"roll",time:"21:00–22:00",title:"自由練習"},
+  {g:"wristlock",d:"五",t:"gi",time:"12:00–13:00",title:"道袍基礎"},
+  {g:"wristlock",d:"五",t:"gi",time:"19:00–20:00",title:"道袍入門"},
+  {g:"wristlock",d:"五",t:"gi",time:"20:00–21:00",title:"道袍中級"},
+  {g:"wristlock",d:"五",t:"roll",time:"21:00–22:00",title:"自由練習"},
+  {g:"wristlock",d:"六",t:"nogi",time:"12:00–13:00",title:"無道袍入門"},
+  {g:"wristlock",d:"六",t:"nogi",time:"13:00–14:00",title:"無道袍入門"},
+  {g:"wristlock",d:"日",t:"gi",time:"12:00–13:00",title:"道袍"},
+  {g:"wristlock",d:"日",t:"gi",time:"13:00–14:00",title:"道袍"},
+  {g:"wuja",d:"三",t:"roll",time:"15:00–16:00",title:"開放自主對打"},
+  {g:"wuja",d:"三",t:"unknown",time:"19:00–20:00",title:"兒童柔術"},
+  {g:"wuja",d:"三",t:"unknown",time:"20:00–21:00",title:"巴西柔術初階"},
+  {g:"wuja",d:"三",t:"roll",time:"21:00–21:45",title:"開放自主對打"},
   {g:"wuja",d:"四",t:"nogi",time:"19:00–20:00",title:"無道服初階（大直）"},
-  {g:"wuja",d:"四",t:"unknown",time:"多時段",title:"柔術初／中（古亭等）"},
-  {g:"wuja",d:"四",t:"roll",time:"15:00–16:00·21:00",title:"開放自主對打"},
-  {g:"wuja",d:"五",t:"unknown",time:"多時段",title:"柔術初階／兒童"},
+  {g:"wuja",d:"四",t:"unknown",time:"20:00–21:00",title:"巴西柔術初階"},
+  {g:"wuja",d:"四",t:"roll",time:"15:00–16:00",title:"開放自主對打"},
+  {g:"wuja",d:"四",t:"roll",time:"21:00–21:45",title:"開放自主對打"},
+  {g:"wuja",d:"五",t:"unknown",time:"19:00–20:00",title:"巴西柔術初階"},
   {g:"wuja",d:"五",t:"roll",time:"21:00–21:45",title:"開放自主對打"},
-  {g:"wuja",d:"六",t:"unknown",time:"多時段",title:"兒童／初階"},
-  {g:"wuja",d:"六",t:"nogi",time:"16:00–17:00",title:"無道服初階（大直）"},
-  {g:"wuja",d:"日",t:"roll",time:"13:00／17:00",title:"開放自主對打"},
-  {g:"wuja",d:"日",t:"unknown",time:"15:00+",title:"柔術／兒童"},
-  // PMA
+  {g:"wuja",d:"六",t:"unknown",time:"12:00–13:00",title:"巴西柔術初階"},
+  {g:"wuja",d:"六",t:"nogi",time:"16:00–17:00",title:"無道服初階"},
+  {g:"wuja",d:"日",t:"roll",time:"13:00–14:00",title:"開放自主對打"},
+  {g:"wuja",d:"日",t:"unknown",time:"15:00–16:00",title:"巴西柔術初階"},
   {g:"pma",d:"一",t:"nogi",time:"19:30–21:30",title:"No-Gi 初階"},
   {g:"pma",d:"二",t:"gi",time:"12:30–14:30",title:"Gi 不分階"},
   {g:"pma",d:"二",t:"nogi",time:"19:30–21:30",title:"No-Gi 摔技 進階"},
   {g:"pma",d:"三",t:"nogi",time:"12:30–14:30",title:"No-Gi 不分階"},
   {g:"pma",d:"三",t:"gi",time:"19:30–21:30",title:"Gi 初階"},
-  {g:"pma",d:"四",t:"roll",time:"12:30–14:30",title:"No-Gi 情境對練 進階"},
+  {g:"pma",d:"四",t:"roll",time:"12:30–14:30",title:"No-Gi 情境對練"},
   {g:"pma",d:"四",t:"nogi",time:"19:30–21:30",title:"No-Gi 摔技 初階"},
-  {g:"pma",d:"五",t:"roll",time:"12:30–14:30",title:"Gi 情境對練 進階"},
+  {g:"pma",d:"五",t:"roll",time:"12:30–14:30",title:"Gi 情境對練"},
   {g:"pma",d:"五",t:"gi",time:"19:30–21:30",title:"Gi 初階"},
-  {g:"pma",d:"六",t:"unknown",time:"10:00–11:15",title:"兒童／女子等"},
   {g:"pma",d:"六",t:"gi",time:"12:30–14:30",title:"Gi 不分階"},
   {g:"pma",d:"日",t:"nogi",time:"12:00–14:00",title:"No-Gi 不分階"},
-  // DFA
   {g:"dfa",d:"一",t:"unknown",time:"18:40–19:40",title:"BJJ Advanced"},
   {g:"dfa",d:"一",t:"roll",time:"19:40–20:40",title:"Open Mat"},
   {g:"dfa",d:"二",t:"unknown",time:"18:40–19:40",title:"BJJ Intermediate"},
   {g:"dfa",d:"四",t:"unknown",time:"19:00–20:00",title:"BJJ Beginners"},
-  {g:"dfa",d:"五",t:"unknown",time:"18:40–20:40",title:"BJJ Beginners／Intermediate"},
+  {g:"dfa",d:"五",t:"unknown",time:"18:40–19:40",title:"BJJ Beginners"},
+  {g:"dfa",d:"五",t:"unknown",time:"19:40–20:40",title:"BJJ Intermediate"},
   {g:"dfa",d:"六",t:"roll",time:"15:00–16:00",title:"Open Mat"},
-  // Haishan
   {g:"haishan",d:"一",t:"nogi",time:"19:30–20:30",title:"無道服體驗"},
-  {g:"haishan",d:"二",t:"gi",time:"12:00·20:30",title:"道服體驗"},
+  {g:"haishan",d:"二",t:"gi",time:"12:00–13:00",title:"道服體驗"},
+  {g:"haishan",d:"二",t:"gi",time:"20:30–21:30",title:"道服入門體驗"},
   {g:"haishan",d:"四",t:"gi",time:"20:30–21:30",title:"道服降伏技體驗"},
-  {g:"haishan",d:"五",t:"gi",time:"12:00·20:30",title:"道服體驗"},
+  {g:"haishan",d:"五",t:"gi",time:"12:00–13:00",title:"道服體驗"},
+  {g:"haishan",d:"五",t:"gi",time:"20:30–21:30",title:"道服入門體驗"},
   {g:"haishan",d:"日",t:"gi",time:"12:30–13:30",title:"道服入門體驗"},
-  // Shuraba
   {g:"shuraba",d:"一",t:"gi",time:"19:30–20:30",title:"Coach Scott Ji-jitsu"},
   {g:"shuraba",d:"二",t:"nogi",time:"19:00–21:00",title:"Coach Eliot Grappling"},
-  {g:"shuraba",d:"三",t:"gi",time:"19:30–20:30",title:"Coach Scott Ji-jitsu"},
+  {g:"shuraba",d:"三",t:"gi",time:"19:30–20:30",title:"Coach Scott Ji-jitsu"}
 ];
 
+const gymById = Object.fromEntries(GYMS.map(g => [g.id, g]));
+
+function parseHM(s) {
+  const m = String(s).trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  return (+m[1]) * 60 + (+m[2]);
+}
+function fmtMin(m) {
+  const h = Math.floor(m / 60), mm = m % 60;
+  return String(h).padStart(2,"0") + ":" + String(mm).padStart(2,"0");
+}
+
+/** Expand slot.time into [{start,end}] minutes */
+function expandTimes(time) {
+  const t = time.replace(/~/g, "–").replace(/-/g, "–");
+  if (t.includes("–")) {
+    const [a,b] = t.split("–").map(x => x.trim());
+    let s = parseHM(a), e = parseHM(b);
+    if (s == null) return [];
+    if (e == null) e = s + 60;
+    if (e <= s) e = s + 60;
+    return [{ start: s, end: e }];
+  }
+  if (t.includes("／") || t.includes("/")) {
+    return t.split(/[／/]/map(x => x.trim()).map(parseHM).filter(x => x != null)
+      .map(s => ({ start: s, end: s + 60 }));
+  }
+  if (t.includes("·")) {
+    return t.split("·").map(x => x.trim()).flatMap(part => expandTimes(part));
+  }
+  const s = parseHM(t);
+  return s == null ? [] : [{ start: s, end: s + 60 }];
+}
+
+const INTERVALS = SLOTS.flatMap(s => expandTimes(s.time).map(iv => ({
+  ...s, start: iv.start, end: iv.end, labelTime: fmtMin(iv.start) + "–" + fmtMin(iv.end)
+})));
+
 const state = {
-  day: "all",
-  gym: "all",
+  day: "all", gym: "all",
   types: new Set(["gi","nogi","roll","unknown"]),
-  q: "",
-  view: "matrix"
+  q: "", view: "matrix",
+  scrubDay: "四", scrubMin: 20*60+40
 };
 
-const gymById = Object.fromEntries(GYMS.map(g => [g.id, g]));
+function typeLabel(t) {
+  return ({gi:"Gi",nogi:"No-Gi",roll:"Rolling",unknown:"未標清"})[t] || t;
+}
+
+function activeAt(day, min) {
+  return INTERVALS.filter(iv => iv.d === day && iv.start <= min && min < iv.end);
+}
+
+function updateScrubber() {
+  const day = state.scrubDay;
+  const min = state.scrubMin;
+  document.getElementById("clockLabel").textContent = fmtMin(min);
+  document.getElementById("timeRange").value = String(min);
+  document.getElementById("scrubDay").value = day;
+  const act = activeAt(day, min);
+  const nGi = act.filter(x => x.t === "gi").length;
+  const nNogi = act.filter(x => x.t === "nogi").length;
+  const nRoll = act.filter(x => x.t === "roll").length;
+  const nUnk = act.filter(x => x.t === "unknown").length;
+  const total = act.length;
+  document.getElementById("nGi").textContent = nGi;
+  document.getElementById("nNogi").textContent = nNogi;
+  document.getElementById("nRoll").textContent = nRoll;
+  document.getElementById("nTotal").textContent = total;
+  const bar = document.getElementById("composeBar");
+  bar.innerHTML = "";
+  const parts = [["gi", nGi], ["nogi", nNogi], ["roll", nRoll]];
+  const typed = nGi + nNogi + nRoll;
+  if (typed === 0) {
+    bar.innerHTML = '<i style="flex:1;background:#2d3a4d"></i>';
+  } else {
+    parts.forEach(([k, n]) => {
+      if (!n) return;
+      const i = document.createElement("i");
+      i.className = k;
+      i.style.flex = String(n);
+      bar.appendChild(i);
+    });
+  }
+  const pct = (n) => total ? Math.round(n / total * 100) : 0;
+  document.getElementById("composeLegend").textContent =
+    `Gi ${nGi}（${pct(nGi)}%） · No-Gi ${nNogi}（${pct(nNogi)}%） · Rolling ${nRoll}（${pct(nRoll)}%）` +
+    (nUnk ? ` · 未標清 ${nUnk}` : "") +
+    ` · 星期${day} ${fmtMin(min)}`;
+  const list = document.getElementById("liveList");
+  if (!act.length) {
+    list.innerHTML = '<div class="empty">此時段沒有已登錄的課（或資料缺口）</div>';
+  } else {
+    list.innerHTML = act.sort((a,b) => a.start - b.start || a.g.localeCompare(b.g)).map(iv => {
+      const g = gymById[iv.g];
+      return `<div class="live-item" data-open="${iv.g}">
+        <span class="badge ${iv.t}">${typeLabel(iv.t)}</span>
+        <strong>${g.name}</strong>
+        <span>${iv.labelTime}</span>
+        <span style="color:var(--muted)">${iv.title}</span>
+        <span style="color:var(--muted);font-size:.75rem">${g.district}</span>
+      </div>`;
+    }).join("");
+  }
+}
 
 function filteredSlots() {
   const q = state.q.trim().toLowerCase();
@@ -349,15 +431,10 @@ function filteredSlots() {
     if (!state.types.has(s.t)) return false;
     if (q) {
       const g = gymById[s.g];
-      const blob = `${g.name} ${s.title} ${s.time} ${s.t}`.toLowerCase();
-      if (!blob.includes(q)) return false;
+      if (!`${g.name} ${s.title} ${s.time} ${s.t}`.toLowerCase().includes(q)) return false;
     }
     return true;
   });
-}
-
-function typeLabel(t) {
-  return ({gi:"Gi",nogi:"No-Gi",roll:"Rolling",unknown:"未標清"})[t] || t;
 }
 
 function showDetail(gymId) {
@@ -375,14 +452,11 @@ function showDetail(gymId) {
     ).join("")}</div>`;
   }).join("");
   el.className = "open";
-  el.innerHTML = `
-    <h2>${g.name} <span style="color:var(--muted);font-size:.9rem">${g.district}</span></h2>
-    <p class="meta">${g.note || ""}</p>
-    <div class="links"><strong>資料來源：</strong>${links}</div>
-    ${img}
+  el.innerHTML = `<h2>${g.name} <span style="color:var(--muted);font-size:.9rem">${g.district}</span></h2>
+    <p>${g.note || ""}</p>
+    <div class="links"><strong>資料來源：</strong>${links}</div>${img}
     <h3 style="margin-top:1rem">完整時段</h3>
-    <div class="day-list">${byDay || "<p class='empty'>無資料</p>"}</div>
-  `;
+    <div class="day-list">${byDay || "<p class='empty'>無資料</p>"}</div>`;
   el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -391,10 +465,7 @@ function renderMatrix() {
   const gymIds = state.gym === "all" ? GYMS.map(g => g.id) : [state.gym];
   const days = state.day === "all" ? DAYS : [state.day];
   let html = `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="day">星期</th>`;
-  gymIds.forEach(id => {
-    const g = gymById[id];
-    html += `<th><button type="button" class="chip" style="width:100%" data-open="${id}">${g.name}</button></th>`;
-  });
+  gymIds.forEach(id => { html += `<th><button type="button" class="chip" style="width:100%" data-open="${id}">${gymById[id].name}</button></th>`; });
   html += `</tr></thead><tbody>`;
   days.forEach(d => {
     html += `<tr><td class="day">${d}</td>`;
@@ -402,9 +473,7 @@ function renderMatrix() {
       const cell = slots.filter(s => s.d === d && s.g === id);
       html += `<td data-open="${id}">`;
       if (!cell.length) html += `<span class="empty">—</span>`;
-      else cell.forEach(s => {
-        html += `<div class="slot ${s.t}"><strong>${typeLabel(s.t)}</strong> ${s.time}<br/>${s.title}</div>`;
-      });
+      else cell.forEach(s => { html += `<div class="slot ${s.t}"><strong>${typeLabel(s.t)}</strong> ${s.time}<br/>${s.title}</div>`; });
       html += `</td>`;
     });
     html += `</tr>`;
@@ -415,9 +484,7 @@ function renderMatrix() {
 
 function renderCards() {
   const slots = filteredSlots();
-  const gymIds = [...new Set(slots.map(s => s.g))];
-  const list = (state.gym === "all" ? GYMS : GYMS.filter(g => g.id === state.gym))
-    .filter(g => state.gym !== "all" || gymIds.includes(g.id) || !state.q);
+  const list = (state.gym === "all" ? GYMS : GYMS.filter(g => g.id === state.gym));
   document.getElementById("cardsView").innerHTML = `<div class="gym-grid">${list.map(g => {
     const gs = slots.filter(s => s.g === g.id);
     const has = new Set(gs.map(s => s.t));
@@ -425,11 +492,11 @@ function renderCards() {
       <h3>${g.name}</h3>
       <div class="meta">${g.district}${g.note ? " · " + g.note : ""}</div>
       <div class="tags">
-        ${has.has("gi") ? '<span class="tag gi">Gi</span>' : ""}
-        ${has.has("nogi") ? '<span class="tag nogi">No-Gi</span>' : ""}
-        ${has.has("roll") ? '<span class="tag roll">Rolling</span>' : ""}
+        ${has.has("gi")?'<span class="tag gi">Gi</span>':''}
+        ${has.has("nogi")?'<span class="tag nogi">No-Gi</span>':''}
+        ${has.has("roll")?'<span class="tag roll">Rolling</span>':''}
       </div>
-      <p style="font-size:.8rem;color:var(--muted);margin:.75rem 0 0">來源 ${g.sources.length} 筆 · 點開看圖與連結</p>
+      <p style="font-size:.8rem;color:var(--muted);margin:.75rem 0 0">來源 ${g.sources.length} 筆</p>
     </div>`;
   }).join("")}</div>`;
 }
@@ -440,37 +507,25 @@ function renderDay() {
   document.getElementById("dayView").innerHTML = `<div class="day-list">${days.map(d => {
     const list = slots.filter(s => s.d === d);
     return `<div class="day-block"><h4>星期${d}</h4>
-      ${list.length ? list.map(s => {
-        const g = gymById[s.g];
-        return `<div class="slot ${s.t}" data-open="${s.g}" style="cursor:pointer">
-          <strong>${g.name}</strong> · ${typeLabel(s.t)} · ${s.time} · ${s.title}
-        </div>`;
-      }).join("") : '<span class="empty">—</span>'}
-    </div>`;
+      ${list.length ? list.map(s => `<div class="slot ${s.t}" data-open="${s.g}" style="cursor:pointer">
+        <strong>${gymById[s.g].name}</strong> · ${typeLabel(s.t)} · ${s.time} · ${s.title}
+      </div>`).join("") : '<span class="empty">—</span>'}</div>`;
   }).join("")}</div>`;
 }
 
 function render() {
-  renderMatrix();
-  renderCards();
-  renderDay();
+  renderMatrix(); renderCards(); renderDay();
   document.getElementById("matrixView").style.display = state.view === "matrix" ? "" : "none";
   document.getElementById("cardsView").style.display = state.view === "cards" ? "" : "none";
   document.getElementById("dayView").style.display = state.view === "day" ? "" : "none";
 }
 
-// init gym filter
 const gf = document.getElementById("gymFilter");
-GYMS.forEach(g => {
-  const o = document.createElement("option");
-  o.value = g.id; o.textContent = g.name;
-  gf.appendChild(o);
-});
+GYMS.forEach(g => { const o = document.createElement("option"); o.value = g.id; o.textContent = g.name; gf.appendChild(o); });
 
 document.getElementById("dayFilter").onchange = e => { state.day = e.target.value; render(); };
 gf.onchange = e => { state.gym = e.target.value; render(); };
 document.getElementById("q").oninput = e => { state.q = e.target.value; render(); };
-
 document.querySelectorAll(".chips .chip").forEach(btn => {
   btn.onclick = () => {
     const t = btn.dataset.type;
@@ -479,7 +534,6 @@ document.querySelectorAll(".chips .chip").forEach(btn => {
     render();
   };
 });
-
 document.querySelectorAll(".view-tabs button").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll(".view-tabs button").forEach(b => b.classList.remove("active"));
@@ -488,12 +542,21 @@ document.querySelectorAll(".view-tabs button").forEach(btn => {
     render();
   };
 });
-
+document.getElementById("scrubDay").onchange = e => { state.scrubDay = e.target.value; updateScrubber(); };
+document.getElementById("timeRange").oninput = e => { state.scrubMin = +e.target.value; updateScrubber(); };
+document.getElementById("jumpNow").onclick = () => {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+  const map = ["日","一","二","三","四","五","六"];
+  state.scrubDay = map[now.getDay()];
+  state.scrubMin = Math.min(1380, Math.max(360, now.getHours()*60 + Math.floor(now.getMinutes()/5)*5));
+  updateScrubber();
+};
 document.body.addEventListener("click", e => {
   const t = e.target.closest("[data-open]");
   if (t) showDetail(t.dataset.open);
 });
 
+updateScrubber();
 render();
 </script>
 </body>
