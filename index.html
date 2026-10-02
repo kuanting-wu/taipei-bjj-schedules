@@ -12,9 +12,45 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; }
-  header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, #1a2332, var(--bg)); }
-  header h1 { margin: 0 0 .35rem; font-size: 1.35rem; }
-  header p { margin: 0; color: var(--muted); font-size: .9rem; }
+  header {
+    padding: .85rem 1.5rem .9rem; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #1a2332, var(--bg));
+  }
+  header .hdr-row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .55rem .85rem;
+    justify-content: space-between;
+  }
+  header h1 { margin: 0; font-size: 1.2rem; line-height: 1.25; flex: 1 1 auto; min-width: 12rem; }
+  header .hdr-meta { margin: .4rem 0 0; color: var(--muted); font-size: .78rem; }
+  header .hdr-tools {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .5rem;
+  }
+  header .hdr-tools .lb {
+    font-size: .72rem; color: var(--muted); margin-right: .1rem; white-space: nowrap;
+  }
+  header .hdr-tools .chip { font-weight: 600; padding: .28rem .65rem; font-size: .8rem; }
+  header .hdr-tools .chip.on { outline-color: var(--accent); }
+  header details.hdr-about {
+    position: relative; margin: 0;
+  }
+  header details.hdr-about > summary {
+    list-style: none; cursor: pointer; user-select: none;
+    width: 1.7rem; height: 1.7rem; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--card); color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .9rem; line-height: 1;
+  }
+  header details.hdr-about > summary::-webkit-details-marker { display: none; }
+  header details.hdr-about > summary:hover { border-color: var(--accent); }
+  header details.hdr-about[open] > summary { outline: 2px solid var(--accent); }
+  header .hdr-about-body {
+    position: absolute; right: 0; top: calc(100% + .4rem); z-index: 40;
+    width: min(22rem, calc(100vw - 2rem));
+    background: #1a2332; border: 1px solid var(--border); border-radius: 10px;
+    padding: .75rem .9rem; box-shadow: 0 12px 28px rgba(0,0,0,.45);
+    font-size: .82rem; color: var(--muted); line-height: 1.45;
+  }
+  header .hdr-about-body strong { color: var(--text); }
   .scrubber { /* panel wrapper supplies chrome */
     margin: 0; padding: 0; background: transparent; border: none; border-radius: 0;
   }
@@ -365,20 +401,11 @@
   }
 
 
-  .layout-bar {
-    display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
-    padding: .75rem 1.5rem; border-bottom: 1px solid var(--border);
-    background: #1a2332; border-top: 1px solid var(--border);
-  }
-  .layout-bar .chip { font-weight: 600; }
-  .layout-bar .lb { font-size: .8rem; color: var(--muted); margin-right: .25rem; }
-  .layout-bar .chip.on { outline-color: var(--accent); }
   #appLayout {
     display: grid; gap: 0; padding-bottom: 1rem;
     grid-template-columns: 1fr;
     /* default = stats-top: stats above, then filters glued to views */
     grid-template-areas:
-      "about"
       "stats"
       "filters"
       "views"
@@ -387,11 +414,10 @@
   }
   #appLayout > .layout-slot { min-width: 0; }
   #appLayout .layout-slot > details.panel { margin-left: 1.5rem; margin-right: 1.5rem; }
-  /* stats TOP: about → stats → filters → views → detail → map */
+  /* stats TOP: stats → filters → views → detail → map */
   #appLayout.layout-stats-top {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "about"
       "stats"
       "filters"
       "views"
@@ -412,7 +438,6 @@
     --stats-col: 300px;
     grid-template-columns: minmax(0, 1fr) 16px var(--stats-col);
     grid-template-areas:
-      "about about about"
       "filters split stats"
       "views split stats"
       "detail detail detail"
@@ -459,14 +484,12 @@
   #appLayout.layout-stacked {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "about"
       "filters"
       "views"
       "stats"
       "detail"
       "map";
   }
-  .slot-about { grid-area: about; }
   .slot-filters { grid-area: filters; }
   .slot-stats { grid-area: stats; }
   .slot-views { grid-area: views; }
@@ -526,7 +549,7 @@
     #appLayout.layout-stats-right {
       grid-template-columns: 1fr;
       grid-template-areas:
-        "about" "filters" "views" "stats" "detail" "map";
+        "filters" "views" "stats" "detail" "map";
     }
     #appLayout.layout-stats-right .slot-split { display: none; }
     #appLayout.layout-stats-right .slot-stats > details.panel {
@@ -537,8 +560,9 @@
 
   /* —— mobile —— */
   @media (max-width: 720px) {
-    header { padding: 1rem; }
-    header h1 { font-size: 1.15rem; }
+    header { padding: .85rem 1rem; }
+    header h1 { font-size: 1.05rem; min-width: 0; }
+    header .hdr-about-body { left: 0; right: auto; }
     .scrubber { margin: 0; padding: 0; }
     .scrubber-top { flex-direction: column; align-items: stretch; gap: .75rem; }
     .now-clock { font-size: 1.45rem; text-align: center; }
@@ -573,25 +597,25 @@
 </head>
 <body>
 <header>
-  <h1>大台北柔術課表 · 時間軸統計</h1>
-  <p>頂部可選「統計顯示位置」· 時間軸在篩選裡 · 地圖在最下方 · 資料截至 2026-10-02</p>
+  <div class="hdr-row">
+    <h1>大台北柔術課表 · 時間軸統計</h1>
+    <div class="hdr-tools" id="layoutBar">
+      <span class="lb">統計位置</span>
+      <button type="button" class="chip on" data-layout="stats-top" title="統計 → 篩選 → 課表">統計在上</button>
+      <button type="button" class="chip" data-layout="stats-right" title="篩選+課表在左，統計貼右（可拖分隔線）">統計在右</button>
+      <button type="button" class="chip" data-layout="stacked" title="篩選 → 課表 → 統計">堆疊</button>
+      <details class="hdr-about" id="aboutPanel">
+        <summary title="說明：距離與方便度">?</summary>
+        <div class="hdr-about-body">
+          距離以 <strong>Taiwanogi（延吉街）</strong> 為基準。每館顯示「距離 km · 預估通勤分」；方便度：≤20分 easy · ≤40分 ok · 更遠／多轉 hard。鄰近對手館（紅）＝ easy 或 ≤3 km 或 ≤20 分。地圖在最下方。
+        </div>
+      </details>
+    </div>
+  </div>
+  <p class="hdr-meta">時間軸在篩選裡 · 資料截至 2026-10-02</p>
 </header>
 
-<div class="layout-bar" id="layoutBar">
-  <span class="lb"><strong style="color:var(--text)">統計位置</strong>（篩選永遠貼著課表）</span>
-  <button type="button" class="chip on" data-layout="stats-top" title="統計 → 篩選 → 課表">統計在上</button>
-  <button type="button" class="chip" data-layout="stats-right" title="篩選+課表在左，統計貼右">統計在右</button>
-  <button type="button" class="chip" data-layout="stacked" title="篩選 → 課表 → 統計">堆疊</button>
-  <span class="lb" style="margin-left:.5rem">地圖在最下方</span>
-</div>
-
 <div id="appLayout" class="layout-stats-top">
-<div class="layout-slot slot-about"><details class="panel" id="aboutPanel" data-panel="about">
-  <summary class="panel-sum">說明 <span class="panel-hint">距離基準 · 方便度</span></summary>
-  <div class="panel-body">
-  <p class="access-note" style="margin:0;max-width:none">距離以 <strong>Taiwanogi（延吉街）</strong> 為基準。每館顯示「距離 km · 預估通勤分」數字；方便度標籤：≤20分 easy · ≤40分 ok · 更遠／多轉 hard。鄰近對手館（紅）＝ easy 或 ≤3 km 或 ≤20 分。</p>
-  </div>
-</details></div>
 <div class="layout-slot slot-stats"><details class="panel scrubber" id="statsPanel" data-panel="stats" open>
   <summary class="panel-sum">統計圖表 <span class="panel-hint">此刻類型 · 近距 vs 遠</span></summary>
   <div class="panel-body">
@@ -675,16 +699,16 @@
       </label>
       <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
       <button type="button" class="chip" id="clearScrub" title="取消選取時刻（顯示全部）">清除時刻</button>
-    </div>
-    <div class="chips time-toggles">
-      <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
-        <input type="checkbox" id="gymsAtNow" checked style="accent-color:#ef4444" />
-        顯示所選時間道館
-      </label>
-      <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
-        <input type="checkbox" id="slotsAtNow" checked style="accent-color:#ef4444" />
-        顯示所選時間課程
-      </label>
+      <div class="chips time-toggles" style="margin:0">
+        <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
+          <input type="checkbox" id="gymsAtNow" checked style="accent-color:#ef4444" />
+          顯示所選時間道館
+        </label>
+        <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
+          <input type="checkbox" id="slotsAtNow" checked style="accent-color:#ef4444" />
+          顯示所選時間課程
+        </label>
+      </div>
     </div>
     <div class="time-rail">
       <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
@@ -1071,7 +1095,7 @@ const SLOTS = [
 const gymById = Object.fromEntries(GYMS.map(g => [g.id, g]));
 
 const PANEL_STORE = "bjj-panel-open-v1";
-const PANEL_DEFAULTS = { about: false, filters: true, stats: true, map: true, views: true, detail: false };
+const PANEL_DEFAULTS = { filters: true, stats: true, map: true, views: true, detail: false };
 
 function loadPanelState() {
   try {
@@ -1851,6 +1875,11 @@ document.body.addEventListener("click", e => {
   if (t) showDetail(t.dataset.open);
 });
 
+
+document.addEventListener("click", (e) => {
+  const about = document.getElementById("aboutPanel");
+  if (about && about.open && !about.contains(e.target)) about.open = false;
+});
 initPanels();
 initLayout();
 initSplitter();
