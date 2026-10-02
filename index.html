@@ -144,12 +144,12 @@
   footer a { color: var(--accent); }
 
 
-  .badge.access-easy { color: #86efac; border-color: #22c55e; }
+  .badge.access-easy { color: #fca5a5; border-color: #ef4444; } /* 近＝競爭對手 */
   .badge.access-ok { color: #fcd34d; border-color: #f59e0b; }
-  .badge.access-hard { color: #fca5a5; border-color: #ef4444; }
-  .tag.access-easy { color: #86efac; border-color: #22c55e; }
+  .badge.access-hard { color: #94a3b8; border-color: #64748b; } /* 遠＝較不直接競爭 */
+  .tag.access-easy { color: #fca5a5; border-color: #ef4444; }
   .tag.access-ok { color: #fcd34d; border-color: #f59e0b; }
-  .tag.access-hard { color: #fca5a5; border-color: #ef4444; }
+  .tag.access-hard { color: #94a3b8; border-color: #64748b; }
   .dist { font-size: .78rem; color: var(--muted); margin-top: .2rem; line-height: 1.35; }
   .dist strong { color: var(--text); font-weight: 600; }
   .matrix-gym-meta {
@@ -265,57 +265,74 @@
   }
 
 
-  .align-wrap { overflow: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 12px; background: #0f1419; max-height: min(70vh, 720px); }
+
+  .align-wrap {
+    overflow: auto; -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border); border-radius: 12px; background: #0f1419;
+    max-height: min(75vh, 820px);
+  }
   .align-hint { font-size: .8rem; color: var(--muted); margin: 0 0 .65rem; }
   .align-hint strong { color: var(--text); }
-  .align-grid { position: relative; min-width: max(100%, 1100px); }
-  .align-hours {
-    display: grid; grid-template-columns: 7.5rem 1fr; position: sticky; top: 0; z-index: 5;
-    background: #1e293b; border-bottom: 1px solid var(--border); font-size: .68rem; color: var(--muted);
+  .align-board {
+    display: grid; grid-template-columns: 3.4rem repeat(var(--cols), minmax(6.8rem, 1fr));
+    min-width: max(100%, calc(3.4rem + var(--cols) * 6.8rem));
+    position: relative;
   }
-  .align-hours .lab { padding: .45rem .5rem; border-right: 1px solid var(--border); font-weight: 600; color: var(--text); }
-  .align-hours .track { position: relative; height: 1.6rem; }
-  .align-hours .tick {
-    position: absolute; top: 0; bottom: 0; border-left: 1px dashed rgba(139,155,180,.35);
-    padding-left: .2rem; line-height: 1.6rem; white-space: nowrap;
+  .align-corner, .align-head {
+    position: sticky; top: 0; z-index: 6; background: #1e293b;
+    border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
+    padding: .45rem .35rem; font-size: .72rem; font-weight: 600; text-align: center;
   }
-  .align-row {
-    display: grid; grid-template-columns: 7.5rem 1fr; border-bottom: 1px solid var(--border);
-    min-height: 2.6rem;
+  .align-corner { left: 0; z-index: 7; }
+  .align-head.rival { color: #fca5a5; }
+  .align-head.base { color: #ddd6fe; }
+  .align-head .sub { display:block; font-weight:400; font-size:.62rem; color:var(--muted); margin-top:.15rem; }
+  .align-time-col {
+    position: sticky; left: 0; z-index: 5; background: #15202e;
+    border-right: 1px solid var(--border); grid-column: 1;
   }
-  .align-row:hover { background: rgba(167,139,250,.04); }
-  .align-row.rival .align-gym { color: #fca5a5; }
-  .align-row.base .align-gym { color: #ddd6fe; }
-  .align-gym {
-    position: sticky; left: 0; z-index: 3; background: #15202e;
-    border-right: 1px solid var(--border); padding: .4rem .5rem;
-    font-size: .75rem; font-weight: 600; cursor: pointer;
-    display: flex; flex-direction: column; justify-content: center; gap: .1rem;
+  .align-time-col .tick {
+    position: absolute; left: 0; right: 0; font-size: .65rem; color: var(--muted);
+    padding: 0 .25rem; transform: translateY(-50%); text-align: right;
+    border-top: 1px dashed rgba(139,155,180,.25);
   }
-  .align-gym .sub { font-weight: 400; font-size: .65rem; color: var(--muted); }
-  .align-track { position: relative; min-height: 2.4rem; }
-  .align-track .vline {
-    position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid rgba(139,155,180,.12); pointer-events: none;
+  .align-col {
+    position: relative; border-right: 1px solid var(--border);
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(60px * var(--pxm) - 1px),
+      rgba(139,155,180,.08) calc(60px * var(--pxm) - 1px),
+      rgba(139,155,180,.08) calc(60px * var(--pxm))
+    );
   }
   .align-block {
-    position: absolute; top: 3px; box-sizing: border-box;
-    border-radius: 6px; padding: .15rem .3rem; overflow: hidden;
-    font-size: .65rem; line-height: 1.2; cursor: pointer;
-    border: 1px solid transparent; white-space: nowrap; text-overflow: ellipsis;
+    position: absolute; box-sizing: border-box; border-radius: 6px;
+    padding: .25rem .3rem; overflow: hidden; font-size: .68rem; line-height: 1.25;
+    cursor: pointer; border: 1px solid transparent; z-index: 1;
   }
-  .align-block.gi { background: rgba(59,130,246,.35); border-color: var(--gi); color: #bfdbfe; }
-  .align-block.nogi { background: rgba(34,197,94,.32); border-color: var(--nogi); color: #bbf7d0; }
-  .align-block.roll { background: rgba(245,158,11,.32); border-color: var(--roll); color: #fde68a; }
-  .align-block.unknown { background: rgba(148,163,184,.28); border-color: var(--unk); color: #e2e8f0; }
-  .align-block:hover { filter: brightness(1.12); z-index: 2; }
+  .align-block.gi { background: rgba(59,130,246,.38); border-color: var(--gi); color: #bfdbfe; }
+  .align-block.nogi { background: rgba(34,197,94,.35); border-color: var(--nogi); color: #bbf7d0; }
+  .align-block.roll { background: rgba(245,158,11,.35); border-color: var(--roll); color: #fde68a; }
+  .align-block.unknown { background: rgba(148,163,184,.3); border-color: var(--unk); color: #e2e8f0; }
+  .align-block.live {
+    outline: 2px solid #fff; box-shadow: 0 0 0 2px var(--accent), 0 0 14px rgba(167,139,250,.55);
+    z-index: 3; filter: brightness(1.15);
+  }
+  .align-block .t { font-weight: 700; font-size: .62rem; opacity: .9; }
+  .align-block:hover { filter: brightness(1.12); z-index: 4; }
   .align-now {
-    position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent);
-    z-index: 4; pointer-events: none; box-shadow: 0 0 6px var(--accent);
+    position: absolute; left: 0; right: 0; height: 2px; background: var(--accent);
+    z-index: 4; pointer-events: none; box-shadow: 0 0 8px var(--accent);
+  }
+  .align-now-label {
+    position: absolute; left: 0; z-index: 8; font-size: .62rem; color: var(--accent);
+    background: rgba(15,20,25,.9); padding: 0 .25rem; transform: translateY(-50%);
+    border-radius: 4px; pointer-events: none;
   }
   @media (max-width: 720px) {
-    .align-hours, .align-row { grid-template-columns: 5.6rem 1fr; }
-    .align-gym { font-size: .68rem; padding: .35rem .3rem; }
-    .align-block { font-size: .6rem; padding: .12rem .22rem; }
+    .align-board { grid-template-columns: 2.8rem repeat(var(--cols), minmax(5.8rem, 1fr)); }
+    .align-block { font-size: .6rem; padding: .18rem .22rem; }
   }
 
   /* —— mobile —— */
@@ -368,53 +385,15 @@
   </div>
 </details>
 
-<details class="panel scrubber" id="scrubber" data-panel="timeline" open>
-  <summary class="panel-sum">時間軸統計 <span class="panel-hint">Gi／No-Gi／Rolling／未分類</span></summary>
-  <div class="panel-body">
-  <div class="scrubber-top">
-    <label>看哪一天
-      <select id="scrubDay">
-        <option value="一">星期一</option><option value="二">星期二</option><option value="三">星期三</option>
-        <option value="四" selected>星期四</option><option value="五">星期五</option>
-        <option value="六">星期六</option><option value="日">星期日</option>
-      </select>
-    </label>
-    <div class="now-clock">此刻 <span id="clockLabel">20:40</span></div>
-    <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
-  </div>
-  <div class="stats">
-    <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi 上課中</div></div>
-    <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi 上課中</div></div>
-    <div class="stat roll"><div class="n" id="nRoll">0</div><div class="l">Rolling／Open mat</div></div>
-    <div class="stat unk"><div class="n" id="nUnk">0</div><div class="l">未分類</div></div>
-    <div class="stat"><div class="n" id="nTotal">0</div><div class="l">進行中總堂數</div></div>
-  </div>
-  <div class="compose" id="composeBar" aria-hidden="true"></div>
-  <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
-  <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
-  <div class="tick-row"><span>06:00</span><span>10:00</span><span>14:00</span><span>18:00</span><span>22:00</span><span>23:00</span></div>
-  <h3 style="margin:1rem 0 .5rem;font-size:.95rem">此時進行中的課</h3>
-  <div class="live-list" id="liveList"></div>
-  </div>
-</details>
-
-<details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
-  <summary class="panel-sum">道館地圖 <span class="panel-hint">以 Taiwanogi 為中心</span></summary>
-  <div class="panel-body">
-  <p class="map-hint">暗色單色底圖。標記：紫★＝Taiwanogi · 紅＝鄰近對手（easy／≤3km／≤20分）· 灰＝其餘。篩選會同步地圖；點標記開課表。</p>
-  <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
-  </div>
-</details>
-
 <details class="panel controls-panel" id="filtersPanel" data-panel="filters" open>
-  <summary class="panel-sum">篩選與排序 <span class="panel-hint">類型 · 距離 · 道館</span></summary>
+  <summary class="panel-sum">共用篩選 <span class="panel-hint">星期 · 類型 · 距離 · 道館（時間軸／對齊／矩陣共用）</span></summary>
   <div class="panel-body">
 <div class="controls">
-  <label>矩陣篩選·星期
+  <label>星期
     <select id="dayFilter">
-      <option value="all">全部</option>
+      <option value="all">全部（矩陣／列表）</option>
       <option value="一">一</option><option value="二">二</option><option value="三">三</option>
-      <option value="四">四</option><option value="五">五</option><option value="六">六</option>
+      <option value="四" selected>四</option><option value="五">五</option><option value="六">六</option>
       <option value="日">日</option>
     </select>
   </label>
@@ -445,9 +424,9 @@
     <label>交通方便度
       <select id="accessFilter">
         <option value="all">全部</option>
-        <option value="easy">僅 easy（≤約20分）</option>
-        <option value="easyok">easy＋ok（≤約40分）</option>
-        <option value="mrt">僅顯示捷運方便（easy＋ok）</option>
+        <option value="easy">僅近距（紅）</option>
+        <option value="easyok">近＋中距</option>
+        <option value="mrt">近＋中距</option>
       </select>
     </label>
     <label>最遠直線 km（0=不限）
@@ -456,6 +435,38 @@
     </label>
   </div>
 </div>
+  </div>
+</details>
+
+<details class="panel scrubber" id="scrubber" data-panel="timeline" open>
+  <summary class="panel-sum">時間軸統計 <span class="panel-hint">Gi／No-Gi／Rolling／未分類</span></summary>
+  <div class="panel-body">
+  <div class="scrubber-top">
+    <div class="now-clock">此刻 <span id="clockLabel">20:40</span> <span id="scrubDayLabel" style="font-size:.95rem;font-weight:600;color:var(--muted)">· 星期四</span></div>
+    <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
+  </div>
+  <p class="align-hint" style="margin:.35rem 0 .5rem">星期與篩選見上方「共用篩選」。時間軸／對齊在「全部」時用台北今天。</p>
+  <div class="stats">
+    <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi 上課中</div></div>
+    <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi 上課中</div></div>
+    <div class="stat roll"><div class="n" id="nRoll">0</div><div class="l">Rolling／Open mat</div></div>
+    <div class="stat unk"><div class="n" id="nUnk">0</div><div class="l">未分類</div></div>
+    <div class="stat"><div class="n" id="nTotal">0</div><div class="l">進行中總堂數</div></div>
+  </div>
+  <div class="compose" id="composeBar" aria-hidden="true"></div>
+  <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
+  <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
+  <div class="tick-row"><span>06:00</span><span>10:00</span><span>14:00</span><span>18:00</span><span>22:00</span><span>23:00</span></div>
+  <h3 style="margin:1rem 0 .5rem;font-size:.95rem">此時進行中的課</h3>
+  <div class="live-list" id="liveList"></div>
+  </div>
+</details>
+
+<details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
+  <summary class="panel-sum">道館地圖 <span class="panel-hint">以 Taiwanogi 為中心</span></summary>
+  <div class="panel-body">
+  <p class="map-hint">暗色單色底圖。標記：紫★＝Taiwanogi · 紅＝鄰近對手（easy／≤3km／≤20分）· 灰＝其餘。篩選會同步地圖；點標記開課表。</p>
+  <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
   </div>
 </details>
 
@@ -867,7 +878,7 @@ function initPanels() {
 
 const ACCESS_RANK = { easy: 0, ok: 1, hard: 2 };
 function accessLabel(a) {
-  return ({easy:"捷運方便",ok:"尚可",hard:"較遠／多轉"})[a] || a;
+  return ({easy:"近（紅）",ok:"中距",hard:"遠"})[a] || a;
 }
 function distLine(g) {
   if (g.km == null && g.transitMin == null) return "";
@@ -951,12 +962,21 @@ const INTERVALS = SLOTS.flatMap(s => expandTimes(s.time).map(iv => ({
 })));
 
 const state = {
-  day: "all", gym: "all",
+  day: "四", gym: "all",
   types: new Set(["gi","nogi","roll","unknown"]),
   q: "", view: "matrix",
-  scrubDay: "四", scrubMin: 20*60+40,
+  scrubMin: 20*60+40,
   sortBy: "transitMin", access: "all", maxKm: 0
 };
+function taipeiWeekday() {
+  const map = ["日","一","二","三","四","五","六"];
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+  return map[now.getDay()];
+}
+/** Shared day for scrubber + align: explicit filter, else Taipei today */
+function scrubViewDay() {
+  return state.day !== "all" ? state.day : taipeiWeekday();
+}
 
 function typeLabel(t) {
   return ({gi:"Gi",nogi:"No-Gi",roll:"Rolling",unknown:"未分類"})[t] || t;
@@ -1052,11 +1072,12 @@ function updateMap() {
 
 
 function updateScrubber() {
-  const day = state.scrubDay;
+  const day = scrubViewDay();
   const min = state.scrubMin;
   document.getElementById("clockLabel").textContent = fmtMin(min);
   document.getElementById("timeRange").value = String(min);
-  document.getElementById("scrubDay").value = day;
+  const sdl = document.getElementById("scrubDayLabel");
+  if (sdl) sdl.textContent = "· 星期" + day + (state.day === "all" ? "（今天）" : "");
   const act = activeAt(day, min);
   const nGi = act.filter(x => x.t === "gi").length;
   const nNogi = act.filter(x => x.t === "nogi").length;
@@ -1151,13 +1172,12 @@ function showDetail(gymId) {
 }
 
 
+
 const ALIGN_START = 6 * 60;   // 06:00
 const ALIGN_END = 23 * 60;    // 23:00
-const ALIGN_PX = 1.35;        // px per minute → sparse horizontal layout
+const ALIGN_PX = 1.2;         // px per minute on vertical axis
 
-function alignDay() {
-  return state.day !== "all" ? state.day : state.scrubDay;
-}
+function alignDay() { return scrubViewDay(); }
 
 function packLanes(list) {
   const sorted = list.slice().sort((a, b) => a.start - b.start || a.end - b.end);
@@ -1178,30 +1198,36 @@ function renderAlign() {
   const gyms = (state.gym === "all" ? gymsOrdered() : GYMS.filter(g => g.id === state.gym));
   const slots = filteredSlots().filter(s => s.d === day);
   const span = ALIGN_END - ALIGN_START;
-  const width = Math.round(span * ALIGN_PX);
+  const height = Math.round(span * ALIGN_PX);
   const hours = [];
-  for (let h = 6; h <= 22; h++) hours.push(h);
-
+  for (let h = 6; h <= 23; h++) hours.push(h);
   const nowMin = state.scrubMin;
   const showNow = nowMin >= ALIGN_START && nowMin <= ALIGN_END;
-  const nowLeft = (nowMin - ALIGN_START) * ALIGN_PX;
+  const nowTop = (nowMin - ALIGN_START) * ALIGN_PX;
+  const cols = Math.max(1, gyms.length);
 
-  let html = `<p class="align-hint">星期<strong>${day}</strong> · 列＝道館、橫軸＝絕對時間（重疊會上下對齊）。`;
-  html += state.day === "all"
-    ? ` 日期跟時間軸「看哪一天」同步；也可在上方篩選固定星期。</p>`
-    : ` 日期跟上方「矩陣篩選·星期」同步。</p>`;
-  html += `<div class="align-wrap"><div class="align-grid" style="--align-w:${width}px">`;
+  let html = `<p class="align-hint">星期<strong>${day}</strong>${state.day === "all" ? "（篩選＝全部 → 台北今天）" : ""} · <strong>直軸＝時間</strong>（上→下）· 欄＝道館。紫框＝時間軸「此刻」進行中。</p>`;
+  html += `<div class="align-wrap"><div class="align-board" style="--cols:${cols};--pxm:${ALIGN_PX}">`;
 
-  // hour header
-  html += `<div class="align-hours"><div class="lab">道館</div><div class="track" style="width:${width}px">`;
-  hours.forEach(h => {
-    const left = (h * 60 - ALIGN_START) * ALIGN_PX;
-    html += `<span class="tick" style="left:${left}px">${String(h).padStart(2,"0")}:00</span>`;
-  });
-  if (showNow) html += `<i class="align-now" style="left:${nowLeft}px" title="時間軸此刻"></i>`;
-  html += `</div></div>`;
-
+  // header
+  html += `<div class="align-corner">時間</div>`;
   gyms.forEach(g => {
+    const tone = gymToneClass(g);
+    html += `<div class="align-head ${tone}" data-open="${g.id}">${g.name}<span class="sub">${distShort(g)}</span></div>`;
+  });
+
+  // time column + gym columns share same row height via grid auto row
+  // Use one body row that spans: time ticks + N columns
+  html += `<div class="align-time-col" style="height:${height}px;grid-row:2;grid-column:1">`;
+  hours.forEach(h => {
+    if (h === 23) return;
+    const top = (h * 60 - ALIGN_START) * ALIGN_PX;
+    html += `<span class="tick" style="top:${top}px">${String(h).padStart(2,"0")}:00</span>`;
+  });
+  if (showNow) html += `<span class="align-now-label" style="top:${nowTop}px">此刻 ${fmtMin(nowMin)}</span>`;
+  html += `</div>`;
+
+  gyms.forEach((g, gi) => {
     const raw = slots.filter(s => s.g === g.id).flatMap(s =>
       expandTimes(s.time).map(iv => ({
         ...s, start: iv.start, end: iv.end,
@@ -1209,26 +1235,21 @@ function renderAlign() {
       }))
     ).filter(iv => iv.end > ALIGN_START && iv.start < ALIGN_END);
     const { items, lanes } = packLanes(raw);
-    const rowH = Math.max(2.4, lanes * 1.55 + 0.35);
-    const tone = gymToneClass(g);
-    html += `<div class="align-row ${tone}" style="min-height:${rowH}rem">`;
-    html += `<div class="align-gym" data-open="${g.id}"><span>${g.name}</span><span class="sub">${distShort(g)}</span></div>`;
-    html += `<div class="align-track" style="width:${width}px;height:${rowH}rem">`;
-    hours.forEach(h => {
-      const left = (h * 60 - ALIGN_START) * ALIGN_PX;
-      html += `<i class="vline" style="left:${left}px"></i>`;
-    });
-    if (showNow) html += `<i class="align-now" style="left:${nowLeft}px"></i>`;
+    html += `<div class="align-col" style="height:${height}px;grid-row:2;grid-column:${gi + 2}">`;
+    if (showNow) html += `<i class="align-now" style="top:${nowTop}px"></i>`;
     items.forEach(iv => {
       const start = Math.max(iv.start, ALIGN_START);
       const end = Math.min(iv.end, ALIGN_END);
-      const left = (start - ALIGN_START) * ALIGN_PX;
-      const w = Math.max(18, (end - start) * ALIGN_PX - 2);
-      const top = 3 + iv.lane * 24;
+      const top = (start - ALIGN_START) * ALIGN_PX;
+      const hpx = Math.max(16, (end - start) * ALIGN_PX - 2);
+      const live = iv.start <= nowMin && nowMin < iv.end;
+      const laneW = 100 / lanes;
+      const left = iv.lane * laneW;
+      const w = laneW - 1.5;
       const label = `${typeLabel(iv.t)} ${iv.labelTime} ${iv.title}`;
-      html += `<div class="align-block ${iv.t}" data-open="${g.id}" title="${label.replace(/"/g,"&quot;")}" style="left:${left}px;width:${w}px;top:${top}px;height:22px">${typeLabel(iv.t)} · ${iv.title}</div>`;
+      html += `<div class="align-block ${iv.t}${live ? " live" : ""}" data-open="${g.id}" title="${label.replace(/"/g, "&quot;")}" style="top:${top}px;height:${hpx}px;left:${left}%;width:${w}%"><div class="t">${iv.labelTime}</div>${typeLabel(iv.t)} · ${iv.title}</div>`;
     });
-    html += `</div></div>`;
+    html += `</div>`;
   });
 
   html += `</div></div>`;
@@ -1321,7 +1342,7 @@ function render() {
 const gf = document.getElementById("gymFilter");
 GYMS.forEach(g => { const o = document.createElement("option"); o.value = g.id; o.textContent = g.name; gf.appendChild(o); });
 
-document.getElementById("dayFilter").onchange = e => { state.day = e.target.value; render(); };
+document.getElementById("dayFilter").onchange = e => { state.day = e.target.value; updateScrubber(); render(); };
 gf.onchange = e => { state.gym = e.target.value; render(); };
 
 document.getElementById("sortBy").onchange = e => { state.sortBy = e.target.value; render(); updateScrubber(); };
@@ -1349,12 +1370,12 @@ document.querySelectorAll(".view-tabs button").forEach(btn => {
     render();
   };
 });
-document.getElementById("scrubDay").onchange = e => { state.scrubDay = e.target.value; updateScrubber(); render(); };
 document.getElementById("timeRange").oninput = e => { state.scrubMin = +e.target.value; updateScrubber(); if (state.view === "align") renderAlign(); };
 document.getElementById("jumpNow").onclick = () => {
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
-  const map = ["日","一","二","三","四","五","六"];
-  state.scrubDay = map[now.getDay()];
+  state.day = taipeiWeekday();
+  const df = document.getElementById("dayFilter");
+  if (df) df.value = state.day;
   state.scrubMin = Math.min(1380, Math.max(360, now.getHours()*60 + Math.floor(now.getMinutes()/5)*5));
   updateScrubber();
   render();
