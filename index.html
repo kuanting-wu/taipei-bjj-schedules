@@ -62,7 +62,7 @@
   }
   .now-clock { font-size: 1.75rem; font-weight: 700; letter-spacing: .02em; }
   .now-clock span { color: var(--accent); }
-  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .6rem; margin: 1rem 0 .75rem; }
+  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .6rem; margin: .5rem 0 .55rem; }
   @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
   .stat {
     background: #0f1419; border: 1px solid var(--border); border-radius: 10px; padding: .75rem;
@@ -111,12 +111,21 @@
   .dot { width: .65rem; height: .65rem; border-radius: 50%; display: inline-block; margin-right: .25rem; }
   .dot.gi { background: var(--gi); } .dot.nogi { background: var(--nogi); } .dot.roll { background: var(--roll); } .dot.unk { background: var(--unk); }
   main { padding: 0; }
-  .view-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
-  .view-tabs button {
-    background: var(--card); border: 1px solid var(--border); color: var(--text);
-    padding: .5rem 1rem; border-radius: 8px; cursor: pointer;
+  .view-tabs {
+    display: inline-flex; flex-wrap: wrap; gap: .28rem; align-items: center;
+    margin: 0 0 .75rem; padding: .22rem;
+    background: #0f1419; border: 1px solid var(--border); border-radius: 999px;
   }
-  .view-tabs button.active { background: #2a3550; border-color: var(--accent); }
+  .view-tabs button {
+    background: transparent; border: 1px solid transparent; color: var(--muted);
+    padding: .28rem .72rem; border-radius: 999px; cursor: pointer;
+    font-size: .78rem; font-weight: 600; line-height: 1.2; white-space: nowrap;
+  }
+  .view-tabs button:hover { color: var(--text); background: rgba(167,139,250,.1); }
+  .view-tabs button.active {
+    background: #243044; color: var(--text); border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(167,139,250,.28);
+  }
   .matrix-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 12px; -webkit-overflow-scrolling: touch; }
   table.matrix { border-collapse: collapse; width: 100%; min-width: 1280px; font-size: .82rem; }
   table.matrix th, table.matrix td { border: 1px solid var(--border); padding: .55rem .5rem; vertical-align: top; background: var(--card); }
@@ -435,50 +444,61 @@
   }
   /* stats RIGHT: filters|split|stats ; views|split|stats ; detail ; map */
   #appLayout.layout-stats-right {
-    --stats-col: 300px;
-    grid-template-columns: minmax(0, 1fr) 16px var(--stats-col);
+    --stats-col: 320px;
+    grid-template-columns: minmax(0, 1fr) 10px var(--stats-col);
     grid-template-areas:
       "filters split stats"
       "views split stats"
       "detail detail detail"
       "map map map";
   }
+  #appLayout.layout-stats-right .slot-stats {
+    display: flex; flex-direction: column; align-self: stretch; min-height: 0;
+  }
   #appLayout.layout-stats-right .slot-stats > details.panel {
-    position: sticky; top: .5rem; margin-left: .25rem; margin-right: 1.5rem;
-    max-height: calc(100vh - 1rem); overflow: auto;
+    position: sticky; top: .5rem; margin-left: 0; margin-right: 1.5rem;
+    display: flex; flex-direction: column;
+    flex: 1 1 auto; height: 100%;
+    max-height: calc(100vh - 1rem); overflow: hidden;
+  }
+  #appLayout.layout-stats-right .slot-stats > details.panel[open] > .panel-body.stats-body {
+    flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0;
+    overflow: auto; padding-bottom: .85rem;
   }
   #appLayout.layout-stats-right .slot-filters > details.panel { margin-right: 0; margin-bottom: .35rem; }
   #appLayout.layout-stats-right .slot-views > details.panel { margin-right: 0; margin-top: .35rem; }
-  #appLayout.layout-stats-right .slot-stats > details.panel { margin-left: 0; }
   .slot-split { grid-area: split; display: none; }
-  #appLayout.layout-stats-right {
-    /* ensure 3-col track is wide enough to see the handle */
-  }
   #appLayout.layout-stats-right .slot-split {
-    display: flex; align-items: stretch; justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     cursor: col-resize; user-select: none; touch-action: none;
-    margin: 0; z-index: 8; min-width: 14px; width: 100%;
-    background: linear-gradient(90deg, transparent, rgba(167,139,250,.18), transparent);
-    border-left: 1px solid var(--border); border-right: 1px solid var(--border);
-    align-self: stretch;
+    margin: 0; z-index: 8; width: 100%; min-width: 10px;
+    background: transparent; border: none; align-self: stretch; position: relative;
+  }
+  #appLayout.layout-stats-right .slot-split::before {
+    content: ""; position: absolute; top: 12%; bottom: 12%; left: 50%;
+    width: 1px; transform: translateX(-50%);
+    background: rgba(148,163,184,.35); pointer-events: none;
   }
   #appLayout.layout-stats-right .slot-split .split-handle {
-    width: 6px; min-height: 48px; align-self: center; height: 40%;
-    border-radius: 999px; background: #a78bfa;
-    box-shadow: 0 0 0 2px rgba(167,139,250,.35), 0 0 10px rgba(167,139,250,.45);
-    transition: background .15s ease, box-shadow .15s ease;
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3px 2px;
+    width: auto; height: auto; min-height: 0; padding: 5px 2px;
+    border-radius: 5px; background: #1a2332; border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,.35);
+    transition: border-color .15s ease, background .15s ease;
+  }
+  #appLayout.layout-stats-right .slot-split .split-handle i {
+    width: 2.5px; height: 2.5px; border-radius: 50%; background: #94a3b8;
+    display: block;
   }
   #appLayout.layout-stats-right .slot-split:hover .split-handle,
   #appLayout.layout-stats-right .slot-split.dragging .split-handle {
-    background: #ef4444;
-    box-shadow: 0 0 0 2px rgba(239,68,68,.45), 0 0 12px rgba(239,68,68,.55);
+    border-color: var(--accent); background: #243044;
   }
-  #appLayout.layout-stats-right .slot-split::after {
-    content: "⟷"; position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); font-size: .65rem; color: #c4b5fd;
-    pointer-events: none; opacity: .85;
+  #appLayout.layout-stats-right .slot-split:hover .split-handle i,
+  #appLayout.layout-stats-right .slot-split.dragging .split-handle i {
+    background: #c4b5fd;
   }
-  #appLayout.layout-stats-right .slot-split { position: relative; }
   body.split-dragging { cursor: col-resize; user-select: none; }
   /* stacked: filters next to data, stats after views */
   #appLayout.layout-stacked {
@@ -531,11 +551,23 @@
     box-shadow: 0 0 6px #ef4444; pointer-events: none; transform: translateX(-1px);
   }
 
-  .chart-block { margin: .65rem 0 .25rem; }
-  .chart-block h4 { margin: 0 0 .4rem; font-size: .85rem; color: var(--muted); font-weight: 600; }
-  .bar-chart { display: grid; gap: .35rem; }
-  .bar-row { display: grid; grid-template-columns: 4.5rem 1fr 2rem; gap: .4rem; align-items: center; font-size: .78rem; }
-  .bar-row .bar-track { height: 10px; background: #0f1419; border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  .stats-modes {
+    display: flex; flex-wrap: wrap; gap: .3rem; margin: .15rem 0 .55rem;
+  }
+  .stats-modes .chip {
+    font-size: .72rem; padding: .22rem .55rem; font-weight: 600;
+  }
+  .stats-modes .chip.on { outline-color: var(--accent); }
+  .stats-charts { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 10rem; }
+  .chart-block {
+    margin: .15rem 0 0; flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0;
+  }
+  .chart-block h4 { margin: 0 0 .2rem; font-size: .82rem; color: var(--muted); font-weight: 600; }
+  .chart-sub { margin: 0 0 .45rem; font-size: .7rem; color: var(--muted); min-height: 1em; }
+  .bar-chart { display: grid; gap: .32rem; flex: 1 1 auto; align-content: start; }
+  .bar-row { display: grid; grid-template-columns: minmax(3.2rem, 5.2rem) 1fr 1.8rem; gap: .35rem; align-items: center; font-size: .74rem; }
+  .bar-row .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .bar-row .bar-track { height: 9px; background: #0f1419; border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
   .bar-row .bar-fill { height: 100%; border-radius: 999px; min-width: 0; }
   .bar-row .bar-fill.gi { background: var(--gi); }
   .bar-row .bar-fill.nogi { background: var(--nogi); }
@@ -543,7 +575,28 @@
   .bar-row .bar-fill.unk { background: var(--unk); }
   .bar-row .bar-fill.rival { background: #ef4444; }
   .bar-row .bar-fill.far { background: #64748b; }
+  .bar-row .bar-fill.gym { background: var(--accent); }
+  .bar-row .bar-fill.gym.rival { background: #ef4444; }
   .bar-row .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .heat-wrap { flex: 1 1 auto; overflow: auto; min-height: 8rem; }
+  .heat-grid {
+    display: grid; gap: 2px;
+    grid-template-columns: 1.4rem repeat(6, minmax(0, 1fr));
+    font-size: .62rem; color: var(--muted); min-width: 0;
+  }
+  .heat-grid .hh { text-align: center; padding: .1rem 0; }
+  .heat-grid .hd { display: flex; align-items: center; justify-content: center; font-weight: 600; }
+  .heat-cell {
+    aspect-ratio: 1.15; border-radius: 3px; border: 1px solid rgba(45,58,77,.8);
+    background: #0f1419; min-height: 1.1rem;
+  }
+  .heat-cell[data-n="0"] { opacity: .35; }
+  .heat-legend { margin-top: .4rem; font-size: .65rem; color: var(--muted); }
+  #appLayout.layout-stats-right .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: .35rem 0 .45rem; gap: .4rem; }
+  #appLayout.layout-stats-right .stat { padding: .5rem .4rem; }
+  #appLayout.layout-stats-right .stat .n { font-size: 1.35rem; }
+  #appLayout.layout-stats-right .compose { margin-bottom: .35rem; }
+  #appLayout.layout-stats-right .compose-legend { font-size: .68rem; margin-bottom: .45rem; }
 
   @media (max-width: 900px) {
     #appLayout.layout-stats-right {
@@ -573,8 +626,8 @@
     select, input[type="search"] { width: 100%; min-width: 0; font-size: 16px; /* avoid iOS zoom */ }
     input[type="range"] { height: 2rem; touch-action: none; }
     main { padding: 0; }
-    .view-tabs { gap: .35rem; }
-    .view-tabs button { flex: 1 1 auto; padding: .65rem .5rem; font-size: .85rem; }
+    .view-tabs { width: 100%; justify-content: stretch; border-radius: 12px; }
+    .view-tabs button { flex: 1 1 auto; text-align: center; padding: .45rem .4rem; font-size: .75rem; }
     .matrix-wrap { -webkit-overflow-scrolling: touch; max-height: 70vh; }
     table.matrix { min-width: 980px; font-size: .75rem; }
     table.matrix th { min-width: 8.5rem; max-width: 11rem; padding: .55rem .4rem; }
@@ -617,8 +670,8 @@
 
 <div id="appLayout" class="layout-stats-top">
 <div class="layout-slot slot-stats"><details class="panel scrubber" id="statsPanel" data-panel="stats" open>
-  <summary class="panel-sum">統計圖表 <span class="panel-hint">此刻類型 · 近距 vs 遠</span></summary>
-  <div class="panel-body">
+  <summary class="panel-sum">統計圖表 <span class="panel-hint">模式切換 · 填滿右側</span></summary>
+  <div class="panel-body stats-body">
     <div class="stats">
       <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi</div></div>
       <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi</div></div>
@@ -628,18 +681,27 @@
     </div>
     <div class="compose" id="composeBar" aria-hidden="true"></div>
     <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
-    <div class="chart-block">
-      <h4>此刻課型分布</h4>
-      <div class="bar-chart" id="chartTypes"></div>
+    <div class="stats-modes chips" id="statsModes" role="tablist" aria-label="統計模式">
+      <button type="button" class="chip on" data-stat-mode="types" title="所選時刻（或全日）課型分布">課型</button>
+      <button type="button" class="chip" data-stat-mode="rival" title="近距對手 vs 其餘">近距</button>
+      <button type="button" class="chip" data-stat-mode="gyms" title="各館堂數（多→少）">道館</button>
+      <button type="button" class="chip" data-stat-mode="heat" title="星期 × 時段熱力（精簡）">熱力</button>
     </div>
-    <div class="chart-block">
-      <h4>近距對手 vs 其餘（進行中）</h4>
-      <div class="bar-chart" id="chartRival"></div>
+    <div class="stats-charts">
+      <div class="chart-block">
+        <h4 id="chartTitle">課型分布</h4>
+        <p class="chart-sub" id="chartSub"></p>
+        <div class="bar-chart" id="chartMain"></div>
+        <div class="heat-wrap" id="chartHeatWrap" style="display:none">
+          <div class="heat-grid" id="chartHeat"></div>
+          <div class="heat-legend" id="chartHeatLegend"></div>
+        </div>
+      </div>
     </div>
   </div>
 </details></div>
-<div class="layout-slot slot-split" id="layoutSplitter" role="separator" aria-orientation="vertical" aria-valuemin="220" aria-valuemax="560" aria-label="拖曳調整左側課表與右側統計寬度" title="拖曳調整寬度">
-  <div class="split-handle" aria-hidden="true"></div>
+<div class="layout-slot slot-split" id="layoutSplitter" role="separator" aria-orientation="vertical" aria-valuemin="220" aria-valuemax="560" aria-label="拖曳調整左側課表與右側統計寬度" title="拖曳分隔線調整寬度">
+  <div class="split-handle" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 </div>
 <div class="layout-slot slot-filters"><details class="panel controls-panel" id="filtersPanel" data-panel="filters" open>
   <summary class="panel-sum">篩選與時間軸 <span class="panel-hint">星期 · 類型 · 此刻紅線</span></summary>
@@ -721,11 +783,11 @@
   <summary class="panel-sum">課表檢視 <span class="panel-hint">矩陣 · 對齊 · 卡片 · 依星期</span></summary>
   <div class="panel-body">
 <main>
-  <div class="view-tabs">
-    <button type="button" class="active" data-view="matrix">矩陣（星期×道館）</button>
-    <button type="button" data-view="align">對齊時間軸</button>
-    <button type="button" data-view="cards">道館卡片</button>
-    <button type="button" data-view="day">依星期列表</button>
+  <div class="view-tabs" role="tablist" aria-label="課表檢視">
+    <button type="button" class="active" data-view="matrix" title="矩陣（星期 × 道館）">矩陣</button>
+    <button type="button" data-view="align" title="對齊時間軸">對齊</button>
+    <button type="button" data-view="cards" title="道館卡片">卡片</button>
+    <button type="button" data-view="day" title="依星期列表">依星期</button>
   </div>
   <div id="matrixView"></div>
   <div id="alignView" style="display:none"></div>
@@ -1232,7 +1294,8 @@ const state = {
   q: "", view: "matrix",
   scrubMin: null, // null = no selected time
   sortBy: "transitMin", access: "all", maxKm: 0,
-  gymsAtNow: true, slotsAtNow: true
+  gymsAtNow: true, slotsAtNow: true,
+  statMode: "types"
 };
 function hasScrubTime() { return state.scrubMin != null && Number.isFinite(state.scrubMin); }
 function taipeiNowDate() {
@@ -1450,43 +1513,182 @@ function updateTimeMark() {
   mark.style.left = (pct * 100) + "%";
 }
 
-function renderCharts(act) {
-  const typesEl = document.getElementById("chartTypes");
-  const rivalEl = document.getElementById("chartRival");
-  if (!typesEl || !rivalEl) return;
-  const counts = {
-    gi: act.filter(x => x.t === "gi").length,
-    nogi: act.filter(x => x.t === "nogi").length,
-    roll: act.filter(x => x.t === "roll").length,
-    unknown: act.filter(x => x.t === "unknown").length
-  };
-  const total = act.length || 1;
-  const typeRows = [
-    ["gi", "Gi", counts.gi],
-    ["nogi", "No-Gi", counts.nogi],
-    ["roll", "Rolling", counts.roll],
-    ["unk", "未分類", counts.unknown]
-  ];
-  typesEl.innerHTML = typeRows.map(([k, lab, n]) => {
-    const pct = Math.round(n / total * 100);
-    return `<div class="bar-row"><span>${lab}</span><div class="bar-track"><div class="bar-fill ${k}" style="width:${pct}%"></div></div><span class="n">${n}</span></div>`;
-  }).join("");
-
-  let nRival = 0, nFar = 0;
-  act.forEach(iv => {
-    const g = gymById[iv.g];
-    if (!g || isBase(g)) return;
-    if (isRival(g)) nRival++; else nFar++;
-  });
-  const denom = Math.max(1, nRival + nFar);
-  rivalEl.innerHTML = [
-    ["rival", "近距（紅）", nRival],
-    ["far", "其餘", nFar]
-  ].map(([k, lab, n]) => {
-    const pct = Math.round(n / denom * 100);
-    return `<div class="bar-row"><span>${lab}</span><div class="bar-track"><div class="bar-fill ${k}" style="width:${pct}%"></div></div><span class="n">${n}</span></div>`;
-  }).join("");
+function barRow(fillClass, lab, n, total) {
+  const pct = total ? Math.round(n / total * 100) : 0;
+  return `<div class="bar-row"><span class="lab" title="${lab}">${lab}</span><div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div><span class="n">${n}</span></div>`;
 }
+
+/** Intervals for charts: at selected time, or all filtered (ignore slotsAtNow) */
+function statsPool(actAtTime) {
+  if (hasScrubTime()) return actAtTime || [];
+  const allowed = new Set(gymsOrdered().map(g => g.id));
+  const q = state.q.trim().toLowerCase();
+  return INTERVALS.filter(iv => {
+    if (state.day !== "all" && iv.d !== state.day) return false;
+    if (state.gym !== "all" && iv.g !== state.gym) return false;
+    if (state.gym === "all" && !allowed.has(iv.g)) return false;
+    if (!state.types.has(iv.t)) return false;
+    if (q) {
+      const g = gymById[iv.g];
+      if (!`${g.name} ${iv.title} ${iv.time} ${iv.t} ${g.mrt||""}`.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderCharts(actAtTime) {
+  const titleEl = document.getElementById("chartTitle");
+  const subEl = document.getElementById("chartSub");
+  const main = document.getElementById("chartMain");
+  const heatWrap = document.getElementById("chartHeatWrap");
+  const heat = document.getElementById("chartHeat");
+  const heatLeg = document.getElementById("chartHeatLegend");
+  if (!main || !titleEl) return;
+  const mode = state.statMode || "types";
+  const pool = statsPool(actAtTime);
+  const scope = hasScrubTime()
+    ? (`所選時刻 ${fmtMin(state.scrubMin)} · 星期${scrubViewDay()}`)
+    : (state.day === "all" ? "全日（未選時刻）" : `星期${state.day} 全日（未選時刻）`);
+
+  document.querySelectorAll("#statsModes [data-stat-mode]").forEach(btn => {
+    btn.classList.toggle("on", btn.dataset.statMode === mode);
+  });
+
+  if (mode === "heat") {
+    main.style.display = "none";
+    if (heatWrap) heatWrap.style.display = "";
+    titleEl.textContent = "星期 × 時段熱力";
+    if (subEl) subEl.textContent = "依篩選課表；色深＝堂數多（精簡 6 時段）";
+    const buckets = [
+      ["上午早", 360, 540],
+      ["上午", 540, 720],
+      ["午後", 720, 900],
+      ["午後晚", 900, 1080],
+      ["晚間", 1080, 1260],
+      ["深夜", 1260, 1440]
+    ];
+    // heat uses all matching slots ignoring scrub time filter for a real week map
+    const allowed = new Set(gymsOrdered().map(g => g.id));
+    const q = state.q.trim().toLowerCase();
+    const base = INTERVALS.filter(iv => {
+      if (state.gym !== "all" && iv.g !== state.gym) return false;
+      if (state.gym === "all" && !allowed.has(iv.g)) return false;
+      if (!state.types.has(iv.t)) return false;
+      if (q) {
+        const g = gymById[iv.g];
+        if (!`${g.name} ${iv.title} ${iv.time}`.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+    const counts = {};
+    let maxN = 0;
+    DAYS.forEach(d => buckets.forEach((_, bi) => { counts[d + "|" + bi] = 0; }));
+    base.forEach(iv => {
+      const mid = (iv.start + iv.end) / 2;
+      const bi = buckets.findIndex(([, a, b]) => mid >= a && mid < b);
+      if (bi < 0) return;
+      const k = iv.d + "|" + bi;
+      counts[k] = (counts[k] || 0) + 1;
+      if (counts[k] > maxN) maxN = counts[k];
+    });
+    const heatColor = (n) => {
+      if (!n || !maxN) return "rgba(167,139,250,.08)";
+      const t = n / maxN;
+      const a = 0.18 + t * 0.72;
+      return `rgba(167,139,250,${a.toFixed(3)})`;
+    };
+    let html = `<div class="hh"></div>` + buckets.map(([lab]) => `<div class="hh">${lab}</div>`).join("");
+    DAYS.forEach(d => {
+      html += `<div class="hd">${d}</div>`;
+      buckets.forEach((_, bi) => {
+        const n = counts[d + "|" + bi] || 0;
+        html += `<div class="heat-cell" data-n="${n}" title="星期${d} ${buckets[bi][0]}：${n} 堂" style="background:${heatColor(n)}"></div>`;
+      });
+    });
+    if (heat) heat.innerHTML = html;
+    if (heatLeg) heatLeg.textContent = maxN ? `最深＝${maxN} 堂／格 · 共 ${base.length} 堂` : "無資料";
+    return;
+  }
+
+  if (heatWrap) heatWrap.style.display = "none";
+  main.style.display = "";
+  if (!pool.length) {
+    titleEl.textContent = ({ types: "課型分布", rival: "近距 vs 其餘", gyms: "各館堂數" })[mode] || "統計";
+    if (subEl) subEl.textContent = scope + " · 無資料";
+    main.innerHTML = `<p class="empty" style="margin:.5rem 0">尚無符合的課</p>`;
+    return;
+  }
+
+  if (mode === "types") {
+    titleEl.textContent = "課型分布";
+    if (subEl) subEl.textContent = scope;
+    const counts = {
+      gi: pool.filter(x => x.t === "gi").length,
+      nogi: pool.filter(x => x.t === "nogi").length,
+      roll: pool.filter(x => x.t === "roll").length,
+      unknown: pool.filter(x => x.t === "unknown").length
+    };
+    const total = pool.length;
+    main.innerHTML = [
+      ["gi", "Gi", counts.gi],
+      ["nogi", "No-Gi", counts.nogi],
+      ["roll", "Rolling", counts.roll],
+      ["unk", "未分類", counts.unknown]
+    ].map(([k, lab, n]) => barRow(k, lab, n, total)).join("");
+    return;
+  }
+
+  if (mode === "rival") {
+    titleEl.textContent = "近距對手 vs 其餘";
+    if (subEl) subEl.textContent = scope + "（不含 Taiwanogi）";
+    let nRival = 0, nFar = 0;
+    pool.forEach(iv => {
+      const g = gymById[iv.g];
+      if (!g || isBase(g)) return;
+      if (isRival(g)) nRival++; else nFar++;
+    });
+    const denom = Math.max(1, nRival + nFar);
+    main.innerHTML = [
+      ["rival", "近距（紅）", nRival],
+      ["far", "其餘", nFar]
+    ].map(([k, lab, n]) => barRow(k, lab, n, denom)).join("");
+    return;
+  }
+
+  if (mode === "gyms") {
+    titleEl.textContent = "各館堂數";
+    if (subEl) subEl.textContent = scope + " · 前 12";
+    const by = {};
+    pool.forEach(iv => { by[iv.g] = (by[iv.g] || 0) + 1; });
+    const rows = Object.entries(by)
+      .map(([id, n]) => ({ id, n, g: gymById[id] }))
+      .filter(x => x.g)
+      .sort((a, b) => b.n - a.n || a.g.name.localeCompare(b.g.name, "zh-Hant"))
+      .slice(0, 12);
+    const maxN = rows[0] ? rows[0].n : 1;
+    main.innerHTML = rows.map(({ n, g }) => {
+      const short = g.name.replace(/^台巴[·・]/g, "").replace(/^UFC GYM /, "UFC ");
+      const cls = isRival(g) ? "gym rival" : (isBase(g) ? "gym" : "gym");
+      return barRow(cls, short, n, maxN);
+    }).join("");
+  }
+}
+
+function initStatModes() {
+  const store = "bjj-stat-mode-v1";
+  try {
+    const saved = localStorage.getItem(store);
+    if (["types", "rival", "gyms", "heat"].includes(saved)) state.statMode = saved;
+  } catch (_) {}
+  document.querySelectorAll("#statsModes [data-stat-mode]").forEach(btn => {
+    btn.onclick = () => {
+      state.statMode = btn.dataset.statMode;
+      try { localStorage.setItem(store, state.statMode); } catch (_) {}
+      updateScrubber();
+    };
+  });
+}
+
 
 
 function updateScrubber() {
@@ -1880,6 +2082,7 @@ document.addEventListener("click", (e) => {
   const about = document.getElementById("aboutPanel");
   if (about && about.open && !about.contains(e.target)) about.open = false;
 });
+initStatModes();
 initPanels();
 initLayout();
 initSplitter();
