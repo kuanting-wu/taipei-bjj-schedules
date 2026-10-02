@@ -15,9 +15,8 @@
   header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, #1a2332, var(--bg)); }
   header h1 { margin: 0 0 .35rem; font-size: 1.35rem; }
   header p { margin: 0; color: var(--muted); font-size: .9rem; }
-  .scrubber {
-    margin: 1rem 1.5rem; padding: 1.1rem 1.25rem; background: var(--card);
-    border: 1px solid var(--border); border-radius: 14px;
+  .scrubber { /* panel wrapper supplies chrome */
+    margin: 0; padding: 0; background: transparent; border: none; border-radius: 0;
   }
   .scrubber-top { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; justify-content: space-between; }
   .scrubber label { font-size: .8rem; color: var(--muted); display: flex; flex-direction: column; gap: .3rem; }
@@ -76,8 +75,8 @@
   .badge.roll { color: #fcd34d; border-color: var(--roll); }
   .badge.unknown { color: #cbd5e1; border-color: var(--unk); }
   .controls {
-    display: flex; flex-wrap: wrap; gap: .75rem; padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border); align-items: center;
+    display: flex; flex-wrap: wrap; gap: .75rem; padding: 0;
+    border-bottom: none; align-items: center;
   }
   .controls label { font-size: .8rem; color: var(--muted); display: flex; flex-direction: column; gap: .25rem; }
   .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
@@ -92,7 +91,7 @@
   .chip.unk.on { outline-color: var(--unk); }
   .dot { width: .65rem; height: .65rem; border-radius: 50%; display: inline-block; margin-right: .25rem; }
   .dot.gi { background: var(--gi); } .dot.nogi { background: var(--nogi); } .dot.roll { background: var(--roll); } .dot.unk { background: var(--unk); }
-  main { padding: 1rem 1.5rem 3rem; }
+  main { padding: 0; }
   .view-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
   .view-tabs button {
     background: var(--card); border: 1px solid var(--border); color: var(--text);
@@ -135,8 +134,7 @@
   .tag.nogi { color: #86efac; border-color: var(--nogi); }
   .tag.roll { color: #fcd34d; border-color: var(--roll); }
   .tag.unknown { color: #cbd5e1; border-color: var(--unk); }
-  #detail { display: none; margin-top: 1.25rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
-  #detail.open { display: block; }
+  /* #detail chrome is provided by details.panel.detail-panel */
   #detail .links a { color: var(--accent); margin-right: 1rem; font-size: .9rem; }
   #detail img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); margin-top: .75rem; }
   .day-list { display: grid; gap: .75rem; }
@@ -168,11 +166,8 @@
   .sort-controls { display:flex; flex-wrap:wrap; gap:.6rem; align-items:flex-end; }
 
 
-  .map-section {
-    margin: 1rem 1.5rem; padding: 1rem 1.25rem; background: var(--card);
-    border: 1px solid var(--border); border-radius: 14px;
-  }
-  .map-section h2 { margin: 0 0 .35rem; font-size: 1.05rem; }
+  .map-section { margin: 0; padding: 0; background: transparent; border: none; border-radius: 0; }
+  .map-section h2 { display: none; } /* title lives in summary */
   .map-section .map-hint { margin: 0 0 .75rem; font-size: .8rem; color: var(--muted); }
   #gymMap {
     width: 100%; height: 360px; border-radius: 10px;
@@ -213,24 +208,72 @@
   .map-pin.ok { background: #f59e0b; }
   .map-pin.hard { background: #ef4444; }
   @media (max-width: 720px) {
-    .map-section { margin: .75rem; padding: .9rem; }
+    .map-section { margin: 0; padding: 0; }
     #gymMap { height: 320px; }
+  }
+
+
+  details.panel {
+    margin: 1rem 1.5rem; background: var(--card);
+    border: 1px solid var(--border); border-radius: 14px;
+  }
+  details.panel > summary.panel-sum {
+    list-style: none; cursor: pointer; user-select: none;
+    display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+    padding: .85rem 1.1rem; font-weight: 600; font-size: 1rem;
+    border-radius: 14px;
+  }
+  details.panel > summary.panel-sum::-webkit-details-marker { display: none; }
+  details.panel > summary.panel-sum::after {
+    content: "▾"; color: var(--muted); font-size: .9rem; transition: transform .15s ease;
+    flex: 0 0 auto;
+  }
+  details.panel:not([open]) > summary.panel-sum::after { transform: rotate(-90deg); }
+  details.panel > summary.panel-sum:hover { background: rgba(167,139,250,.06); }
+  details.panel > summary.panel-sum .panel-hint {
+    font-weight: 400; font-size: .75rem; color: var(--muted); margin-left: .35rem;
+  }
+  details.panel .panel-body { padding: 0 1.1rem 1.1rem; }
+  /* scrubber/map used to own margin+padding — nest inside panel */
+  details.panel.scrubber, details.panel.map-section {
+    padding: 0; /* summary + body handle padding */
+  }
+  details.panel.scrubber .panel-body,
+  details.panel.map-section .panel-body { padding-top: .25rem; }
+  details.panel.controls-panel .panel-body {
+    display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-start;
+    padding-top: .35rem;
+  }
+  details.panel.views-panel .panel-body { padding-top: .35rem; }
+  #detail { display: block; margin-top: 0; background: transparent; border: none; border-radius: 0; padding: 0; min-height: 0; }
+  #detail:not(.open)::before {
+    content: "尚未選擇道館 — 點時間軸／矩陣列開啟";
+    display: block; color: var(--muted); font-size: .85rem; padding: .25rem 0 .5rem;
+  }
+  #detail.open::before { content: none; }
+  .controls { /* legacy class retained inside panel-body */
+    display: contents;
+  }
+  @media (max-width: 720px) {
+    details.panel { margin: .75rem; }
+    details.panel > summary.panel-sum { padding: .75rem .9rem; font-size: .95rem; min-height: 44px; }
+    details.panel .panel-body { padding: 0 .9rem .9rem; }
   }
 
   /* —— mobile —— */
   @media (max-width: 720px) {
     header { padding: 1rem; }
     header h1 { font-size: 1.15rem; }
-    .scrubber { margin: .75rem; padding: .9rem; }
+    .scrubber { margin: 0; padding: 0; }
     .scrubber-top { flex-direction: column; align-items: stretch; gap: .75rem; }
     .now-clock { font-size: 1.45rem; text-align: center; }
     .stats { grid-template-columns: repeat(2, 1fr); gap: .5rem; }
     .stat .n { font-size: 1.45rem; }
-    .controls { padding: .75rem; gap: .6rem; }
+    .controls { padding: 0; gap: .6rem; }
     .controls label { width: 100%; }
     select, input[type="search"] { width: 100%; min-width: 0; font-size: 16px; /* avoid iOS zoom */ }
     input[type="range"] { height: 2rem; touch-action: none; }
-    main { padding: .75rem .75rem 2.5rem; }
+    main { padding: 0; }
     .view-tabs { gap: .35rem; }
     .view-tabs button { flex: 1 1 auto; padding: .65rem .5rem; font-size: .85rem; }
     .matrix-wrap { -webkit-overflow-scrolling: touch; max-height: 70vh; }
@@ -259,10 +302,17 @@
 <header>
   <h1>大台北柔術課表 · 時間軸統計</h1>
   <p>拖拉時間軸，看「此刻」有幾堂 Gi／No-Gi／Rolling · 亦可切矩陣／卡片 · 資料截至 2026-10-02</p>
-  <p class="access-note">距離以 <strong>Taiwanogi（延吉街）</strong> 為基準。每館顯示「距離 km · 預估通勤分」數字；方便度標籤：≤20分 easy · ≤40分 ok · 更遠／多轉 hard。</p>
 </header>
+<details class="panel" id="aboutPanel" data-panel="about">
+  <summary class="panel-sum">說明 <span class="panel-hint">距離基準 · 方便度</span></summary>
+  <div class="panel-body">
+  <p class="access-note" style="margin:0;max-width:none">距離以 <strong>Taiwanogi（延吉街）</strong> 為基準。每館顯示「距離 km · 預估通勤分」數字；方便度標籤：≤20分 easy · ≤40分 ok · 更遠／多轉 hard。鄰近對手館（紅）＝ easy 或 ≤3 km 或 ≤20 分。</p>
+  </div>
+</details>
 
-<section class="scrubber" id="scrubber">
+<details class="panel scrubber" id="scrubber" data-panel="timeline" open>
+  <summary class="panel-sum">時間軸統計 <span class="panel-hint">Gi／No-Gi／Rolling／未分類</span></summary>
+  <div class="panel-body">
   <div class="scrubber-top">
     <label>看哪一天
       <select id="scrubDay">
@@ -287,14 +337,20 @@
   <div class="tick-row"><span>06:00</span><span>10:00</span><span>14:00</span><span>18:00</span><span>22:00</span><span>23:00</span></div>
   <h3 style="margin:1rem 0 .5rem;font-size:.95rem">此時進行中的課</h3>
   <div class="live-list" id="liveList"></div>
-</section>
+  </div>
+</details>
 
-<section class="map-section" id="mapSection" aria-label="道館地圖">
-  <h2>道館地圖 · 以 Taiwanogi 為中心</h2>
+<details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
+  <summary class="panel-sum">道館地圖 <span class="panel-hint">以 Taiwanogi 為中心</span></summary>
+  <div class="panel-body">
   <p class="map-hint">標記顏色＝捷運方便度（紫★＝Taiwanogi 基準 · 綠 easy · 黃 ok · 紅 hard）。下方篩選／最遠 km／道館會同步地圖。同址重疊會微調顯示。點標記可開課表。</p>
   <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
-</section>
+  </div>
+</details>
 
+<details class="panel controls-panel" id="filtersPanel" data-panel="filters" open>
+  <summary class="panel-sum">篩選與排序 <span class="panel-hint">類型 · 距離 · 道館</span></summary>
+  <div class="panel-body">
 <div class="controls">
   <label>矩陣篩選·星期
     <select id="dayFilter">
@@ -342,7 +398,12 @@
     </label>
   </div>
 </div>
+  </div>
+</details>
 
+<details class="panel views-panel" id="viewsPanel" data-panel="views" open>
+  <summary class="panel-sum">課表檢視 <span class="panel-hint">矩陣 · 卡片 · 依星期</span></summary>
+  <div class="panel-body">
 <main>
   <div class="view-tabs">
     <button type="button" class="active" data-view="matrix">矩陣（星期×道館）</button>
@@ -352,8 +413,16 @@
   <div id="matrixView"></div>
   <div id="cardsView" style="display:none"></div>
   <div id="dayView" style="display:none"></div>
-  <div id="detail"></div>
 </main>
+  </div>
+</details>
+
+<details class="panel detail-panel" id="detailPanel" data-panel="detail">
+  <summary class="panel-sum">道館詳情 <span class="panel-hint">點課表列開啟</span></summary>
+  <div class="panel-body">
+  <div id="detail"></div>
+  </div>
+</details>
 
 <footer>
   來源為各館官網／IG／FB 公開課表；時間軸統計依解析後的時段重疊計算，僅供參考。距離／捷運以 Taiwanogi 為基準估算，非即時導航。
@@ -701,6 +770,41 @@ const SLOTS = [
 
 const gymById = Object.fromEntries(GYMS.map(g => [g.id, g]));
 
+const PANEL_STORE = "bjj-panel-open-v1";
+const PANEL_DEFAULTS = { about: false, timeline: true, map: true, filters: true, views: true, detail: false };
+
+function loadPanelState() {
+  try {
+    const raw = localStorage.getItem(PANEL_STORE);
+    return raw ? { ...PANEL_DEFAULTS, ...JSON.parse(raw) } : { ...PANEL_DEFAULTS };
+  } catch (_) { return { ...PANEL_DEFAULTS }; }
+}
+function savePanelState() {
+  const st = {};
+  document.querySelectorAll("details.panel[data-panel]").forEach(el => {
+    st[el.dataset.panel] = el.open;
+  });
+  try { localStorage.setItem(PANEL_STORE, JSON.stringify(st)); } catch (_) {}
+}
+function initPanels() {
+  const st = loadPanelState();
+  document.querySelectorAll("details.panel[data-panel]").forEach(el => {
+    const key = el.dataset.panel;
+    if (key === "detail" && !el.querySelector("#detail")?.classList.contains("open")) {
+      el.open = false;
+    } else if (key in st) {
+      el.open = !!st[key];
+    }
+    el.addEventListener("toggle", () => {
+      savePanelState();
+      if (el.dataset.panel === "map" && el.open && typeof gymMap !== "undefined" && gymMap) {
+        setTimeout(() => gymMap.invalidateSize(), 80);
+      }
+    });
+  });
+}
+
+
 const ACCESS_RANK = { easy: 0, ok: 1, hard: 2 };
 function accessLabel(a) {
   return ({easy:"捷運方便",ok:"尚可",hard:"較遠／多轉"})[a] || a;
@@ -973,7 +1077,9 @@ function showDetail(gymId) {
     <div class="links"><strong>資料來源：</strong>${links}</div>${img}
     <h3 style="margin-top:1rem">完整時段</h3>
     <div class="day-list">${byDay || "<p class='empty'>無資料</p>"}</div>`;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  const dp = document.getElementById("detailPanel");
+  if (dp) { dp.open = true; savePanelState(); }
+  (dp || el).scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderMatrix() {
@@ -1100,6 +1206,7 @@ document.body.addEventListener("click", e => {
   if (t) showDetail(t.dataset.open);
 });
 
+initPanels();
 updateScrubber();
 render();
 initMap();
