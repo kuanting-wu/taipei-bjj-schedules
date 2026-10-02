@@ -302,6 +302,12 @@
 
 
 
+  .align-day-band { margin: 0 0 1.1rem; }
+  .align-day-band > h3 {
+    margin: 0 0 .4rem; font-size: .95rem; font-weight: 700;
+    color: var(--text); display: flex; align-items: baseline; gap: .5rem;
+  }
+  .align-day-band > h3 .band-meta { font-size: .75rem; font-weight: 500; color: var(--muted); }
   .align-wrap {
     overflow: auto; -webkit-overflow-scrolling: touch;
     border: 1px solid var(--border); border-radius: 12px; background: #0f1419;
@@ -709,7 +715,7 @@
 <div class="controls">
   <label>星期
     <select id="dayFilter">
-      <option value="all">全部（矩陣／列表）</option>
+      <option value="all" selected>全部</option>
       <option value="一">一</option><option value="二">二</option><option value="三">三</option>
       <option value="四">四</option><option value="五">五</option><option value="六">六</option>
       <option value="日">日</option>
@@ -763,11 +769,11 @@
       <button type="button" class="chip" id="clearScrub" title="取消選取時刻（顯示全部）">清除時刻</button>
       <div class="chips time-toggles" style="margin:0">
         <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
-          <input type="checkbox" id="gymsAtNow" checked style="accent-color:#ef4444" />
+          <input type="checkbox" id="gymsAtNow" style="accent-color:#ef4444" />
           顯示所選時間道館
         </label>
         <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
-          <input type="checkbox" id="slotsAtNow" checked style="accent-color:#ef4444" />
+          <input type="checkbox" id="slotsAtNow" style="accent-color:#ef4444" />
           顯示所選時間課程
         </label>
       </div>
@@ -1289,12 +1295,12 @@ const INTERVALS = SLOTS.flatMap(s => expandTimes(s.time).map(iv => ({
 })));
 
 const state = {
-  day: "四", gym: "all",
+  day: "all", gym: "all",
   types: new Set(["gi","nogi","roll","unknown"]),
   q: "", view: "matrix",
-  scrubMin: null, // null = no selected time
+  scrubMin: null, // null = no selected time (cleared on load)
   sortBy: "transitMin", access: "all", maxKm: 0,
-  gymsAtNow: true, slotsAtNow: true,
+  gymsAtNow: false, slotsAtNow: false,
   statMode: "types"
 };
 function hasScrubTime() { return state.scrubMin != null && Number.isFinite(state.scrubMin); }
@@ -1324,9 +1330,15 @@ function clearScrubTime() {
   // keep thumb position for UX but treat as unselected until user drags again
   if (tr) tr.disabled = false;
 }
-/** Shared day for scrubber + align: explicit filter, else Taipei today */
+/**
+ * Day used for "at selected time" filters / live marks.
+ * Never invents a weekday when day=all and no time selected.
+ * When day=all AND time selected → Taipei today (for「此刻」).
+ */
 function scrubViewDay() {
-  return state.day !== "all" ? state.day : taipeiWeekday();
+  if (state.day !== "all") return state.day;
+  if (hasScrubTime()) return taipeiWeekday();
+  return null;
 }
 
 function typeLabel(t) {
@@ -1546,8 +1558,9 @@ function renderCharts(actAtTime) {
   if (!main || !titleEl) return;
   const mode = state.statMode || "types";
   const pool = statsPool(actAtTime);
+  const _chartDay = scrubViewDay();
   const scope = hasScrubTime()
-    ? (`所選時刻 ${fmtMin(state.scrubMin)} · 星期${scrubViewDay()}`)
+    ? (`所選時刻 ${fmtMin(state.scrubMin)}` + (_chartDay ? ` · 星期${_chartDay}${state.day === "all" ? "（今天）" : ""}` : ""))
     : (state.day === "all" ? "全日（未選時刻）" : `星期${state.day} 全日（未選時刻）`);
 
   document.querySelectorAll("#statsModes [data-stat-mode]").forEach(btn => {
@@ -1692,7 +1705,7 @@ function initStatModes() {
 
 
 function updateScrubber() {
-  const day = scrubViewDay();
+  const day = scrubViewDay(); // null when day=all and no time
   const min = state.scrubMin;
   const scrubRoot = document.getElementById("scrubber");
   if (scrubRoot) scrubRoot.classList.toggle("no-time", !hasScrubTime());
@@ -1700,10 +1713,12 @@ function updateScrubber() {
   const tr = document.getElementById("timeRange");
   if (tr && hasScrubTime()) tr.value = String(min);
   const sdl = document.getElementById("scrubDayLabel");
-  if (sdl) sdl.textContent = hasScrubTime()
-    ? ("· 星期" + day + (state.day === "all" ? "（今天）" : ""))
-    : "· 未選時刻";
-  let act = hasScrubTime() ? activeAt(day, min) : [];
+  if (sdl) {
+    if (!hasScrubTime()) sdl.textContent = "· 未選時刻";
+    else if (day) sdl.textContent = "· 星期" + day + (state.day === "all" ? "（今天）" : "");
+    else sdl.textContent = "· 請選星期";
+  }
+  let act = (hasScrubTime() && day) ? activeAt(day, min) : [];
   const allowedGyms = new Set(gymsOrdered().map(g => g.id));
   act = act.filter(iv => {
     if (state.gym !== "all" && iv.g !== state.gym) return false;
@@ -1766,6 +1781,7 @@ function gymsForScheduleViews() {
   let list = state.gym === "all" ? gymsOrdered() : GYMS.filter(g => g.id === state.gym);
   if (!state.gymsAtNow || !hasScrubTime()) return list;
   const dayNow = scrubViewDay();
+  if (!dayNow) return list;
   const min = state.scrubMin;
   const allowed = new Set(gymsOrdered().map(g => g.id));
   return list.filter(g => {
@@ -1784,7 +1800,7 @@ function filteredSlots() {
     if (state.gym !== "all" && s.g !== state.gym) return false;
     if (state.gym === "all" && !allowed.has(s.g)) return false;
     if (!state.types.has(s.t)) return false;
-    if (state.slotsAtNow && hasScrubTime() && !slotActiveAt(s, dayNow, min)) return false;
+    if (state.slotsAtNow && hasScrubTime() && dayNow && !slotActiveAt(s, dayNow, min)) return false;
     if (q) {
       const g = gymById[s.g];
       if (!`${g.name} ${s.title} ${s.time} ${s.t} ${g.mrt||""} ${g.transit||""}`.toLowerCase().includes(q)) return false;
@@ -1828,8 +1844,6 @@ const ALIGN_START = 6 * 60;   // 06:00
 const ALIGN_END = 23 * 60;    // 23:00
 const ALIGN_PX = 1.2;         // px per minute on vertical axis
 
-function alignDay() { return scrubViewDay(); }
-
 function packLanes(list) {
   const sorted = list.slice().sort((a, b) => a.start - b.start || a.end - b.end);
   const laneEnd = [];
@@ -1844,33 +1858,24 @@ function packLanes(list) {
   return { items: out, lanes: Math.max(1, laneEnd.length) };
 }
 
-function renderAlign() {
-  const day = alignDay();
-  const gyms = gymsForScheduleViews();
-  const slots = filteredSlots().filter(s => s.d === day);
+/** One weekday board (gym columns × time). liveDay = weekday that owns the red line. */
+function buildAlignBoard(day, gyms, allSlots, liveDay) {
+  const slots = allSlots.filter(s => s.d === day);
   const span = ALIGN_END - ALIGN_START;
   const height = Math.round(span * ALIGN_PX);
   const hours = [];
   for (let h = 6; h <= 23; h++) hours.push(h);
   const nowMin = state.scrubMin;
-  const showNow = hasScrubTime() && nowMin >= ALIGN_START && nowMin <= ALIGN_END;
-  const nowTop = (nowMin - ALIGN_START) * ALIGN_PX;
+  const showNow = hasScrubTime() && day === liveDay && nowMin >= ALIGN_START && nowMin <= ALIGN_END;
+  const nowTop = showNow ? (nowMin - ALIGN_START) * ALIGN_PX : 0;
   const cols = Math.max(1, gyms.length);
 
-  let html = `<p class="align-hint">星期<strong>${day}</strong>${state.day === "all" ? "（篩選＝全部 → 台北今天）" : ""} · 直軸＝時間 · 欄＝道館。` +
-    (hasScrubTime()
-      ? `課表上的<strong style="color:#fca5a5">紅線＝篩選「此刻」${fmtMin(nowMin)}</strong>。`
-      : `<span style="color:var(--muted)">未選時刻（無紅線／時間篩選）。</span>`) + `</p>`;
-  html += `<div class="align-wrap"><div class="align-board" style="--cols:${cols};--pxm:${ALIGN_PX}">`;
-
-  // sticky header row
+  let html = `<div class="align-wrap"><div class="align-board" style="--cols:${cols};--pxm:${ALIGN_PX}">`;
   html += `<div class="align-corner">時間</div>`;
   gyms.forEach(g => {
     const tone = gymToneClass(g);
     html += `<div class="align-head ${tone}" data-open="${g.id}">${g.name}<span class="sub">${distShort(g)}</span></div>`;
   });
-
-  // body: flex row so one absolute red line spans ALL gym columns
   html += `<div class="align-body" style="height:${height}px">`;
   html += `<div class="align-time-col" style="height:${height}px">`;
   hours.forEach(h => {
@@ -1879,7 +1884,6 @@ function renderAlign() {
     html += `<span class="tick" style="top:${top}px">${String(h).padStart(2,"0")}:00</span>`;
   });
   html += `</div><div class="align-cols" style="height:${height}px">`;
-
   gyms.forEach((g) => {
     const raw = slots.filter(s => s.g === g.id).flatMap(s =>
       expandTimes(s.time).map(iv => ({
@@ -1894,7 +1898,7 @@ function renderAlign() {
       const end = Math.min(iv.end, ALIGN_END);
       const top = (start - ALIGN_START) * ALIGN_PX;
       const hpx = Math.max(16, (end - start) * ALIGN_PX - 2);
-      const live = hasScrubTime() && iv.start <= nowMin && nowMin < iv.end;
+      const live = showNow && iv.start <= nowMin && nowMin < iv.end;
       const laneW = 100 / lanes;
       const left = iv.lane * laneW;
       const w = laneW - 1.5;
@@ -1903,24 +1907,59 @@ function renderAlign() {
     });
     html += `</div>`;
   });
-
-  html += `</div>`; // align-cols
+  html += `</div>`;
   if (showNow) {
     html += `<div class="align-now-cross" style="top:${nowTop}px" title="此刻 ${fmtMin(nowMin)}">`;
     html += `<span class="align-now-label">此刻 ${fmtMin(nowMin)}</span>`;
     html += `</div>`;
   }
-  html += `</div></div></div>`; // body, board, wrap
+  html += `</div></div></div>`;
+  return { html, showNow, nowTop };
+}
+
+function renderAlign() {
+  const gyms = gymsForScheduleViews();
+  const slots = filteredSlots();
+  const nowMin = state.scrubMin;
+  // Red line / live marks only on Taipei today when day=all + time selected; else on the chosen day.
+  const liveDay = state.day !== "all" ? state.day : (hasScrubTime() ? taipeiWeekday() : null);
+  const days = state.day === "all" ? DAYS.slice() : [state.day];
+
+  let html = `<p class="align-hint">`;
+  if (state.day === "all") {
+    html += `篩選＝<strong>全部</strong> → 下列為<strong>一～日</strong>分段（不會偷換成台北今天）。直軸＝時間 · 欄＝道館。`;
+  } else {
+    html += `星期<strong>${state.day}</strong> · 直軸＝時間 · 欄＝道館。`;
+  }
+  html += hasScrubTime()
+    ? ` 課表上的<strong style="color:#fca5a5">紅線＝篩選「此刻」${fmtMin(nowMin)}</strong>${liveDay ? `（標在星期${liveDay}${state.day === "all" ? "＝台北今天" : ""}）` : ""}。`
+    : ` <span style="color:var(--muted)">未選時刻（無紅線／時間篩選）。</span>`;
+  html += `</p>`;
+
+  let firstNowTop = null;
+  days.forEach(d => {
+    const n = slots.filter(s => s.d === d).length;
+    if (state.day === "all") {
+      html += `<div class="align-day-band" data-day="${d}"><h3>星期${d} <span class="band-meta">${n} 堂</span></h3>`;
+    }
+    const built = buildAlignBoard(d, gyms, slots, liveDay);
+    html += built.html;
+    if (built.showNow && firstNowTop == null) firstNowTop = built.nowTop;
+    if (state.day === "all") html += `</div>`;
+  });
 
   const root = document.getElementById("alignView");
   root.innerHTML = html;
-  // Keep red line in view when scrubbing
-  if (showNow && state.view === "align") {
+  if (firstNowTop != null && state.view === "align") {
     const line = root.querySelector(".align-now-cross");
-    const wrap = root.querySelector(".align-wrap");
+    const wrap = line && line.closest(".align-wrap");
     if (line && wrap) {
-      const y = Math.max(0, nowTop - wrap.clientHeight * 0.35);
+      const y = Math.max(0, firstNowTop - wrap.clientHeight * 0.35);
       wrap.scrollTop = y;
+      if (state.day === "all") {
+        const band = line.closest(".align-day-band");
+        if (band) band.scrollIntoView({ block: "nearest" });
+      }
     }
   }
 }
@@ -1930,8 +1969,8 @@ function renderMatrix() {
   const gymIds = gymsForScheduleViews().map(g => g.id);
   const days = state.day === "all" ? DAYS : [state.day];
   const dayNow = scrubViewDay();
-  let html = hasScrubTime()
-    ? `<p class="matrix-now-hint">紅框＝篩選此刻 <strong>${fmtMin(state.scrubMin)}</strong>（星期${dayNow}）進行中的課</p>`
+  let html = hasScrubTime() && dayNow
+    ? `<p class="matrix-now-hint">紅框＝篩選此刻 <strong>${fmtMin(state.scrubMin)}</strong>（星期${dayNow}${state.day === "all" ? "＝台北今天" : ""}）進行中的課</p>`
     : `<p class="matrix-now-hint" style="color:var(--muted)">未選時刻 — 顯示全部（點時間軸或「跳到現在」）</p>`;
   html += `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="day">星期</th>`;
   gymIds.forEach(id => {
@@ -1956,7 +1995,8 @@ function renderMatrix() {
       html += `<td data-open="${id}">`;
       if (!cell.length) html += `<span class="empty">—</span>`;
       else cell.forEach(s => {
-        const live = hasScrubTime() && slotActiveAt(s, scrubViewDay(), state.scrubMin);
+        const _sd = scrubViewDay();
+        const live = hasScrubTime() && _sd && slotActiveAt(s, _sd, state.scrubMin);
         html += `<div class="slot ${s.t}${live ? " live-now" : ""}"><strong>${typeLabel(s.t)}</strong> ${s.time}<br/>${s.title}</div>`;
       });
       html += `</td>`;
@@ -2054,11 +2094,11 @@ document.getElementById("timeRange").oninput = e => {
 const gymsAtNowEl = document.getElementById("gymsAtNow");
 const slotsAtNowEl = document.getElementById("slotsAtNow");
 if (gymsAtNowEl) {
-  gymsAtNowEl.checked = true;
+  gymsAtNowEl.checked = !!state.gymsAtNow;
   gymsAtNowEl.onchange = e => { state.gymsAtNow = !!e.target.checked; updateScrubber(); render(); };
 }
 if (slotsAtNowEl) {
-  slotsAtNowEl.checked = true;
+  slotsAtNowEl.checked = !!state.slotsAtNow;
   slotsAtNowEl.onchange = e => { state.slotsAtNow = !!e.target.checked; updateScrubber(); render(); };
 }
 document.getElementById("jumpNow").onclick = () => {
@@ -2086,7 +2126,10 @@ initStatModes();
 initPanels();
 initLayout();
 initSplitter();
-syncToTaipeiNow();
+// Load defaults: day=all, no time, time filters off — only「跳到現在」calls syncToTaipeiNow
+const _dfBoot = document.getElementById("dayFilter");
+if (_dfBoot) _dfBoot.value = state.day;
+clearScrubTime();
 updateScrubber();
 render();
 initMap();
