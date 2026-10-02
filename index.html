@@ -659,20 +659,55 @@
   .line-chart-wrap .line-meta {
     font-size: .65rem; color: var(--muted); margin: 0;
   }
-  .heat-wrap { flex: 1 1 auto; overflow: auto; min-height: 8rem; }
+  .heat-wrap {
+    flex: 1 1 auto; overflow: auto; min-height: 10rem;
+    display: flex; flex-direction: column; gap: .55rem;
+  }
+  .heat-table-wrap {
+    overflow: auto; border: 1px solid var(--border); border-radius: 10px;
+    background: #0f1419;
+  }
   .heat-grid {
-    display: grid; gap: 2px;
-    grid-template-columns: 1.4rem repeat(6, minmax(0, 1fr));
-    font-size: .62rem; color: var(--muted); min-width: 0;
+    display: grid;
+    grid-template-columns: 2.4rem repeat(6, minmax(2.6rem, 1fr));
+    gap: 3px; padding: .55rem; min-width: 18rem; font-size: .72rem;
   }
-  .heat-grid .hh { text-align: center; padding: .1rem 0; }
-  .heat-grid .hd { display: flex; align-items: center; justify-content: center; font-weight: 600; }
+  .heat-grid .hh {
+    text-align: center; padding: .35rem .15rem .25rem;
+    color: var(--muted); font-weight: 600; font-size: .68rem; line-height: 1.2;
+  }
+  .heat-grid .hh .ht { display: block; color: #c4b5fd; font-size: .62rem; font-weight: 500; }
+  .heat-grid .hd {
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--text); font-size: .78rem;
+    background: #1a2332; border-radius: 6px; min-height: 2.2rem;
+  }
   .heat-cell {
-    aspect-ratio: 1.15; border-radius: 3px; border: 1px solid rgba(45,58,77,.8);
-    background: #0f1419; min-height: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 2.35rem; border-radius: 6px;
+    border: 1px solid #2d3a4d;
+    font-variant-numeric: tabular-nums; font-weight: 700; font-size: .72rem;
+    color: #e7ecf3; line-height: 1;
   }
-  .heat-cell[data-n="0"] { opacity: .35; }
-  .heat-legend { margin-top: .4rem; font-size: .65rem; color: var(--muted); }
+  .heat-cell.is-empty {
+    background: #141b24 !important; color: #4b5568; font-weight: 500;
+    border-color: #243044;
+  }
+  .heat-cell.is-hot { color: #0f1419; }
+  .heat-scale {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    font-size: .68rem; color: var(--muted);
+  }
+  .heat-scale .bar {
+    flex: 1 1 8rem; height: 10px; border-radius: 999px; border: 1px solid var(--border);
+    background: linear-gradient(90deg, #1e293b 0%, rgba(167,139,250,.25) 35%, #a78bfa 100%);
+    min-width: 7rem;
+  }
+  .heat-scale .ends {
+    display: flex; justify-content: space-between; gap: .75rem; width: 100%;
+    font-variant-numeric: tabular-nums;
+  }
+  .heat-legend { margin: 0; font-size: .68rem; color: var(--muted); line-height: 1.35; }
   #appLayout.layout-stats-right .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: .35rem 0 .45rem; gap: .4rem; }
   #appLayout.layout-stats-right .stat { padding: .5rem .4rem; }
   #appLayout.layout-stats-right .stat .n { font-size: 1.35rem; }
@@ -781,7 +816,10 @@
         <p class="chart-sub" id="chartSub"></p>
         <div class="bar-chart" id="chartMain"></div>
         <div class="heat-wrap" id="chartHeatWrap" style="display:none">
-          <div class="heat-grid" id="chartHeat"></div>
+          <div class="heat-table-wrap">
+            <div class="heat-grid" id="chartHeat"></div>
+          </div>
+          <div class="heat-scale" id="chartHeatScale" aria-hidden="true"></div>
           <div class="heat-legend" id="chartHeatLegend"></div>
         </div>
       </div>
@@ -1792,22 +1830,22 @@ function renderCharts(actAtTime) {
   if (mode === "heat") {
     main.style.display = "none";
     if (heatWrap) heatWrap.style.display = "";
-    titleEl.textContent = "星期 × 時段熱力";
+    titleEl.textContent = "星期 × 時段";
     if (subEl) subEl.textContent = isStatPct()
-      ? "依篩選課表；色深＝相對占比高（精簡 6 時段）· 顯示佔比"
-      : "依篩選課表；色深＝堂數多（精簡 6 時段）· 顯示數量";
+      ? "列＝星期 · 欄＝時段 · 格內＝佔全體篩選課表的占比"
+      : "列＝星期 · 欄＝時段 · 格內＝堂數";
     const buckets = [
-      ["上午早", 360, 540],
-      ["上午", 540, 720],
-      ["午後", 720, 900],
-      ["午後晚", 900, 1080],
-      ["晚間", 1080, 1260],
-      ["深夜", 1260, 1440]
+      ["清晨", "06–09", 360, 540],
+      ["上午", "09–12", 540, 720],
+      ["午後", "12–15", 720, 900],
+      ["傍晚", "15–18", 900, 1080],
+      ["晚間", "18–21", 1080, 1260],
+      ["深夜", "21–24", 1260, 1440]
     ];
-    // heat uses all matching slots ignoring scrub time filter for a real week map
     const allowed = new Set(gymsOrdered().map(g => g.id));
     const q = state.q.trim().toLowerCase();
     const base = INTERVALS.filter(iv => {
+      if (state.day !== "all" && iv.d !== state.day) return false;
       if (state.gym !== "all" && iv.g !== state.gym) return false;
       if (state.gym === "all" && !allowed.has(iv.g)) return false;
       if (!state.types.has(iv.t)) return false;
@@ -1817,43 +1855,67 @@ function renderCharts(actAtTime) {
       }
       return true;
     });
+    const dayRows = state.day === "all" ? DAYS : [state.day];
     const counts = {};
     let maxN = 0;
-    DAYS.forEach(d => buckets.forEach((_, bi) => { counts[d + "|" + bi] = 0; }));
+    dayRows.forEach(d => buckets.forEach((_, bi) => { counts[d + "|" + bi] = 0; }));
     base.forEach(iv => {
       const mid = (iv.start + iv.end) / 2;
-      const bi = buckets.findIndex(([, a, b]) => mid >= a && mid < b);
+      const bi = buckets.findIndex(([, , a, b]) => mid >= a && mid < b);
       if (bi < 0) return;
       const k = iv.d + "|" + bi;
-      counts[k] = (counts[k] || 0) + 1;
+      if (!(k in counts)) return;
+      counts[k] += 1;
       if (counts[k] > maxN) maxN = counts[k];
     });
+    const totalAll = base.length || 1;
     const heatColor = (n) => {
-      if (!n || !maxN) return "rgba(167,139,250,.08)";
+      if (!n || !maxN) return "#141b24";
       const t = n / maxN;
-      const a = 0.18 + t * 0.72;
-      return `rgba(167,139,250,${a.toFixed(3)})`;
+      // purple scale with readable contrast
+      if (t < 0.2) return "#2a2450";
+      if (t < 0.4) return "#4338a8";
+      if (t < 0.6) return "#6d5ae0";
+      if (t < 0.8) return "#a78bfa";
+      return "#ddd6fe";
     };
-    let html = `<div class="hh"></div>` + buckets.map(([lab]) => `<div class="hh">${lab}</div>`).join("");
-    DAYS.forEach(d => {
-      html += `<div class="hd">${d}</div>`;
-      buckets.forEach((_, bi) => {
+    let grid = `<div class="hh" aria-hidden="true"></div>`;
+    buckets.forEach(([lab, range]) => {
+      grid += `<div class="hh">${lab}<span class="ht">${range}</span></div>`;
+    });
+    dayRows.forEach(d => {
+      grid += `<div class="hd">週${d}</div>`;
+      buckets.forEach((b, bi) => {
         const n = counts[d + "|" + bi] || 0;
-        const share = base.length ? Math.round(n / base.length * 100) : 0;
+        const share = Math.round(n / totalAll * 100);
+        const label = isStatPct() ? (n ? share + "%" : "·") : (n ? String(n) : "·");
         const tip = isStatPct()
-          ? `星期${d} ${buckets[bi][0]}：${share}%（${n}／${base.length}）`
-          : `星期${d} ${buckets[bi][0]}：${n} 堂`;
-        html += `<div class="heat-cell" data-n="${n}" title="${tip}" style="background:${heatColor(n)}"></div>`;
+          ? `週${d} ${b[0]}（${b[1]}）：${share}% · ${n}／${base.length} 堂`
+          : `週${d} ${b[0]}（${b[1]}）：${n} 堂`;
+        const hot = n > 0 && n / maxN >= 0.8;
+        const empty = !n;
+        grid += `<div class="heat-cell${empty ? " is-empty" : ""}${hot ? " is-hot" : ""}" data-n="${n}" title="${tip}" style="background:${heatColor(n)}">${label}</div>`;
       });
     });
-    if (heat) heat.innerHTML = html;
+    if (heat) {
+      heat.className = "heat-grid";
+      heat.innerHTML = grid;
+    }
+    const scale = document.getElementById("chartHeatScale");
+    if (scale) {
+      const lo = isStatPct() ? "0%" : "0";
+      const hi = isStatPct()
+        ? ((base.length ? Math.round(maxN / totalAll * 100) : 0) + "%")
+        : String(maxN || 0);
+      scale.innerHTML = `<span>低</span><div class="bar" aria-hidden="true"></div><span>高</span>`
+        + `<div class="ends"><span>${lo}</span><span>最深 ${hi}</span></div>`;
+    }
     if (heatLeg) {
-      if (!maxN) heatLeg.textContent = "無資料";
+      if (!maxN) heatLeg.textContent = "無符合篩選的課";
       else if (isStatPct()) {
-        const topShare = base.length ? Math.round(maxN / base.length * 100) : 0;
-        heatLeg.textContent = `最深≈${topShare}%（${maxN} 堂／格）· 共 ${base.length} 堂 · 單位＝佔比`;
+        heatLeg.textContent = `共 ${base.length} 堂 · 格內％＝該格／全體 · 顏色依格內堂數相對最深格`;
       } else {
-        heatLeg.textContent = `最深＝${maxN} 堂／格 · 共 ${base.length} 堂 · 單位＝數量`;
+        heatLeg.textContent = `共 ${base.length} 堂 · 格內＝堂數 · 顏色愈淺愈多`;
       }
     }
     return;
