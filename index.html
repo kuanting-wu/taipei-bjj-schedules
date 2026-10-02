@@ -262,6 +262,60 @@
     details.panel .panel-body { padding: 0 .9rem .9rem; }
   }
 
+
+  .align-wrap { overflow: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 12px; background: #0f1419; max-height: min(70vh, 720px); }
+  .align-hint { font-size: .8rem; color: var(--muted); margin: 0 0 .65rem; }
+  .align-hint strong { color: var(--text); }
+  .align-grid { position: relative; min-width: max(100%, 1100px); }
+  .align-hours {
+    display: grid; grid-template-columns: 7.5rem 1fr; position: sticky; top: 0; z-index: 5;
+    background: #1e293b; border-bottom: 1px solid var(--border); font-size: .68rem; color: var(--muted);
+  }
+  .align-hours .lab { padding: .45rem .5rem; border-right: 1px solid var(--border); font-weight: 600; color: var(--text); }
+  .align-hours .track { position: relative; height: 1.6rem; }
+  .align-hours .tick {
+    position: absolute; top: 0; bottom: 0; border-left: 1px dashed rgba(139,155,180,.35);
+    padding-left: .2rem; line-height: 1.6rem; white-space: nowrap;
+  }
+  .align-row {
+    display: grid; grid-template-columns: 7.5rem 1fr; border-bottom: 1px solid var(--border);
+    min-height: 2.6rem;
+  }
+  .align-row:hover { background: rgba(167,139,250,.04); }
+  .align-row.rival .align-gym { color: #fca5a5; }
+  .align-row.base .align-gym { color: #ddd6fe; }
+  .align-gym {
+    position: sticky; left: 0; z-index: 3; background: #15202e;
+    border-right: 1px solid var(--border); padding: .4rem .5rem;
+    font-size: .75rem; font-weight: 600; cursor: pointer;
+    display: flex; flex-direction: column; justify-content: center; gap: .1rem;
+  }
+  .align-gym .sub { font-weight: 400; font-size: .65rem; color: var(--muted); }
+  .align-track { position: relative; min-height: 2.4rem; }
+  .align-track .vline {
+    position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid rgba(139,155,180,.12); pointer-events: none;
+  }
+  .align-block {
+    position: absolute; top: 3px; box-sizing: border-box;
+    border-radius: 6px; padding: .15rem .3rem; overflow: hidden;
+    font-size: .65rem; line-height: 1.2; cursor: pointer;
+    border: 1px solid transparent; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .align-block.gi { background: rgba(59,130,246,.35); border-color: var(--gi); color: #bfdbfe; }
+  .align-block.nogi { background: rgba(34,197,94,.32); border-color: var(--nogi); color: #bbf7d0; }
+  .align-block.roll { background: rgba(245,158,11,.32); border-color: var(--roll); color: #fde68a; }
+  .align-block.unknown { background: rgba(148,163,184,.28); border-color: var(--unk); color: #e2e8f0; }
+  .align-block:hover { filter: brightness(1.12); z-index: 2; }
+  .align-now {
+    position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent);
+    z-index: 4; pointer-events: none; box-shadow: 0 0 6px var(--accent);
+  }
+  @media (max-width: 720px) {
+    .align-hours, .align-row { grid-template-columns: 5.6rem 1fr; }
+    .align-gym { font-size: .68rem; padding: .35rem .3rem; }
+    .align-block { font-size: .6rem; padding: .12rem .22rem; }
+  }
+
   /* —— mobile —— */
   @media (max-width: 720px) {
     header { padding: 1rem; }
@@ -404,15 +458,17 @@
 </details>
 
 <details class="panel views-panel" id="viewsPanel" data-panel="views" open>
-  <summary class="panel-sum">課表檢視 <span class="panel-hint">矩陣 · 卡片 · 依星期</span></summary>
+  <summary class="panel-sum">課表檢視 <span class="panel-hint">矩陣 · 對齊 · 卡片 · 依星期</span></summary>
   <div class="panel-body">
 <main>
   <div class="view-tabs">
     <button type="button" class="active" data-view="matrix">矩陣（星期×道館）</button>
+    <button type="button" data-view="align">對齊時間軸</button>
     <button type="button" data-view="cards">道館卡片</button>
     <button type="button" data-view="day">依星期列表</button>
   </div>
   <div id="matrixView"></div>
+  <div id="alignView" style="display:none"></div>
   <div id="cardsView" style="display:none"></div>
   <div id="dayView" style="display:none"></div>
 </main>
@@ -1089,6 +1145,91 @@ function showDetail(gymId) {
   (dp || el).scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+
+const ALIGN_START = 6 * 60;   // 06:00
+const ALIGN_END = 23 * 60;    // 23:00
+const ALIGN_PX = 1.35;        // px per minute → sparse horizontal layout
+
+function alignDay() {
+  return state.day !== "all" ? state.day : state.scrubDay;
+}
+
+function packLanes(list) {
+  const sorted = list.slice().sort((a, b) => a.start - b.start || a.end - b.end);
+  const laneEnd = [];
+  const out = [];
+  sorted.forEach(iv => {
+    let lane = 0;
+    while (lane < laneEnd.length && laneEnd[lane] > iv.start) lane++;
+    if (lane === laneEnd.length) laneEnd.push(iv.end);
+    else laneEnd[lane] = iv.end;
+    out.push({ ...iv, lane });
+  });
+  return { items: out, lanes: Math.max(1, laneEnd.length) };
+}
+
+function renderAlign() {
+  const day = alignDay();
+  const gyms = (state.gym === "all" ? gymsOrdered() : GYMS.filter(g => g.id === state.gym));
+  const slots = filteredSlots().filter(s => s.d === day);
+  const span = ALIGN_END - ALIGN_START;
+  const width = Math.round(span * ALIGN_PX);
+  const hours = [];
+  for (let h = 6; h <= 22; h++) hours.push(h);
+
+  const nowMin = state.scrubMin;
+  const showNow = nowMin >= ALIGN_START && nowMin <= ALIGN_END;
+  const nowLeft = (nowMin - ALIGN_START) * ALIGN_PX;
+
+  let html = `<p class="align-hint">星期<strong>${day}</strong> · 列＝道館、橫軸＝絕對時間（重疊會上下對齊）。`;
+  html += state.day === "all"
+    ? ` 日期跟時間軸「看哪一天」同步；也可在上方篩選固定星期。</p>`
+    : ` 日期跟上方「矩陣篩選·星期」同步。</p>`;
+  html += `<div class="align-wrap"><div class="align-grid" style="--align-w:${width}px">`;
+
+  // hour header
+  html += `<div class="align-hours"><div class="lab">道館</div><div class="track" style="width:${width}px">`;
+  hours.forEach(h => {
+    const left = (h * 60 - ALIGN_START) * ALIGN_PX;
+    html += `<span class="tick" style="left:${left}px">${String(h).padStart(2,"0")}:00</span>`;
+  });
+  if (showNow) html += `<i class="align-now" style="left:${nowLeft}px" title="時間軸此刻"></i>`;
+  html += `</div></div>`;
+
+  gyms.forEach(g => {
+    const raw = slots.filter(s => s.g === g.id).flatMap(s =>
+      expandTimes(s.time).map(iv => ({
+        ...s, start: iv.start, end: iv.end,
+        labelTime: fmtMin(iv.start) + "–" + fmtMin(iv.end)
+      }))
+    ).filter(iv => iv.end > ALIGN_START && iv.start < ALIGN_END);
+    const { items, lanes } = packLanes(raw);
+    const rowH = Math.max(2.4, lanes * 1.55 + 0.35);
+    const tone = gymToneClass(g);
+    html += `<div class="align-row ${tone}" style="min-height:${rowH}rem">`;
+    html += `<div class="align-gym" data-open="${g.id}"><span>${g.name}</span><span class="sub">${distShort(g)}</span></div>`;
+    html += `<div class="align-track" style="width:${width}px;height:${rowH}rem">`;
+    hours.forEach(h => {
+      const left = (h * 60 - ALIGN_START) * ALIGN_PX;
+      html += `<i class="vline" style="left:${left}px"></i>`;
+    });
+    if (showNow) html += `<i class="align-now" style="left:${nowLeft}px"></i>`;
+    items.forEach(iv => {
+      const start = Math.max(iv.start, ALIGN_START);
+      const end = Math.min(iv.end, ALIGN_END);
+      const left = (start - ALIGN_START) * ALIGN_PX;
+      const w = Math.max(18, (end - start) * ALIGN_PX - 2);
+      const top = 3 + iv.lane * 24;
+      const label = `${typeLabel(iv.t)} ${iv.labelTime} ${iv.title}`;
+      html += `<div class="align-block ${iv.t}" data-open="${g.id}" title="${label.replace(/"/g,"&quot;")}" style="left:${left}px;width:${w}px;top:${top}px;height:22px">${typeLabel(iv.t)} · ${iv.title}</div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `</div></div>`;
+  document.getElementById("alignView").innerHTML = html;
+}
+
 function renderMatrix() {
   const slots = filteredSlots();
   const gymIds = state.gym === "all" ? gymsOrdered().map(g => g.id) : [state.gym];
@@ -1164,8 +1305,9 @@ function renderDay() {
 }
 
 function render() {
-  renderMatrix(); renderCards(); renderDay();
+  renderMatrix(); renderAlign(); renderCards(); renderDay();
   document.getElementById("matrixView").style.display = state.view === "matrix" ? "" : "none";
+  document.getElementById("alignView").style.display = state.view === "align" ? "" : "none";
   document.getElementById("cardsView").style.display = state.view === "cards" ? "" : "none";
   document.getElementById("dayView").style.display = state.view === "day" ? "" : "none";
   updateMap();
@@ -1202,14 +1344,15 @@ document.querySelectorAll(".view-tabs button").forEach(btn => {
     render();
   };
 });
-document.getElementById("scrubDay").onchange = e => { state.scrubDay = e.target.value; updateScrubber(); };
-document.getElementById("timeRange").oninput = e => { state.scrubMin = +e.target.value; updateScrubber(); };
+document.getElementById("scrubDay").onchange = e => { state.scrubDay = e.target.value; updateScrubber(); render(); };
+document.getElementById("timeRange").oninput = e => { state.scrubMin = +e.target.value; updateScrubber(); if (state.view === "align") renderAlign(); };
 document.getElementById("jumpNow").onclick = () => {
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
   const map = ["日","一","二","三","四","五","六"];
   state.scrubDay = map[now.getDay()];
   state.scrubMin = Math.min(1380, Math.max(360, now.getHours()*60 + Math.floor(now.getMinutes()/5)*5));
   updateScrubber();
+  render();
 };
 document.body.addEventListener("click", e => {
   const t = e.target.closest("[data-open]");
