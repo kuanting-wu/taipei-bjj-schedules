@@ -176,6 +176,7 @@
     border: 1px solid var(--border); background: #0b1016; z-index: 1;
   }
   .leaflet-container { background: #0b1016; font: inherit; }
+  .leaflet-tile-pane { filter: grayscale(1) contrast(1.08) brightness(0.72); }
   .leaflet-popup-content-wrapper {
     background: #1a2332; color: var(--text); border: 1px solid var(--border);
     border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.45);
@@ -193,9 +194,10 @@
     border-color: var(--border) !important;
   }
   .leaflet-control-attribution {
-    background: rgba(15,20,25,.85) !important; color: var(--muted) !important; font-size: .65rem !important;
+    background: rgba(15,20,25,.55) !important; color: #64748b !important; font-size: .6rem !important;
+    opacity: .65;
   }
-  .leaflet-control-attribution a { color: var(--accent) !important; }
+  .leaflet-control-attribution a { color: #78869c !important; }
     .leaflet-div-icon { background: transparent; border: none; }
   .map-pin {
     width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
@@ -206,9 +208,9 @@
     transform: rotate(45deg); font-size: .7rem; font-weight: 700; color: #fff; line-height: 1;
   }
   .map-pin.base { background: var(--accent); width: 34px; height: 34px; border-color: #ede9fe; }
-  .map-pin.easy { background: #22c55e; }
-  .map-pin.ok { background: #f59e0b; }
-  .map-pin.hard { background: #ef4444; }
+  .map-pin.rival { background: #ef4444; border-color: #fecaca; }
+  .map-pin.muted { background: #64748b; border-color: #94a3b8; }
+  /* legacy access classes unused on map pins */
   @media (max-width: 720px) {
     .map-section { margin: 0; padding: 0; }
     #gymMap { height: 320px; }
@@ -399,7 +401,7 @@
 <details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
   <summary class="panel-sum">道館地圖 <span class="panel-hint">以 Taiwanogi 為中心</span></summary>
   <div class="panel-body">
-  <p class="map-hint">標記顏色＝捷運方便度（紫★＝Taiwanogi 基準 · 綠 easy · 黃 ok · 紅 hard）。下方篩選／最遠 km／道館會同步地圖。同址重疊會微調顯示。點標記可開課表。</p>
+  <p class="map-hint">暗色單色底圖。標記：紫★＝Taiwanogi · 紅＝鄰近對手（easy／≤3km／≤20分）· 灰＝其餘。篩選會同步地圖；點標記開課表。</p>
   <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
   </div>
 </details>
@@ -970,13 +972,15 @@ let gymMarkers = {};
 const BASE = GYMS.find(g => g.id === "taiwannogi");
 
 function pinIcon(g) {
-  const cls = g.id === "taiwannogi" ? "base" : (g.access || "ok");
-  const label = g.id === "taiwannogi" ? "★" : "";
+  const tone = gymToneClass(g); // base | rival | ""
+  const cls = tone === "base" ? "base" : (tone === "rival" ? "rival" : "muted");
+  const label = tone === "base" ? "★" : "";
+  const big = tone === "base";
   return L.divIcon({
     className: "",
     html: `<div class="map-pin ${cls}"><span>${label}</span></div>`,
-    iconSize: g.id === "taiwannogi" ? [34, 34] : [28, 28],
-    iconAnchor: g.id === "taiwannogi" ? [17, 30] : [14, 26],
+    iconSize: big ? [34, 34] : [28, 28],
+    iconAnchor: big ? [17, 30] : [14, 26],
     popupAnchor: [0, -22]
   });
 }
@@ -984,9 +988,10 @@ function pinIcon(g) {
 function initMap() {
   if (gymMap || typeof L === "undefined") return;
   gymMap = L.map("gymMap", { scrollWheelZoom: false, zoomControl: true });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+    attribution: 'Tiles &copy; Esri — Dark Gray Canvas',
+    maxZoom: 16,
+    errorTileUrl: ""
   }).addTo(gymMap);
   gymMap.setView([BASE.lat, BASE.lng], 11);
   gymMap.on("click", () => { /* allow focus */ });
