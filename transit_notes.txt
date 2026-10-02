@@ -1,0 +1,36 @@
+Distance & transit convenience (baseline: Taiwanogi)
+Updated: 2026-10-02 Asia/Taipei
+
+METHOD
+- Origin: Taiwanogi / AZ Fight Club — 台北市大安區延吉街131巷1弄26號B1
+  Nearest MRT: 忠孝敦化（步行約8分）；亦近國父紀念館／信義安和。
+- km: great-circle (haversine) km from origin, 1 decimal.
+- mrt / walkMin: nearest useful station + walk estimate (official copy preferred when available).
+- transitMin: rough door-to-door MRT+walk minutes FROM Taiwanogi area (not live navigation).
+- access: easy ≤~20 min · ok ≤~40 · hard >40 or multi-transfer / no nearby MRT.
+- km ≠ convenience: e.g. Neihu is ~4.5 km but needs Wenhu transfer; Tucheng Wristlock is ~12.5 km but Blue Line direct.
+
+ADDRESSES (verified / best public source)
+taiwannogi     大安延吉街131巷1弄26號B1 — official Taiwanogi / AZ
+ufcgym_dunnan  大安安和路一段27號B1 — ufcgym.com.tw（忠孝敦化5號出口步行約2分）
+ufcgym_neihu   內湖洲子街55號1F — ufcgym.com.tw（港墘2號出口步行約1分）
+dfa            中正杭州南路一段10號B1 — dfamma / 善導寺旁
+pma            中山新生北路三段82巷33號1樓 — FB / BJJASIA
+twbjj_taipei   中山吉林路12-3號B1 — taiwanbjj.org
+twbjj_zhongzheng 中正南昌路一段153號2F — taiwanbjj.org
+twbjj_zhonghe  中和中正路755號2F — taiwanbjj.org
+twbjj_haishan / haishan  土城清水路33號1F — taiwanbjj.org
+wristlock      土城中正路1號B1-2 — taiwanbjj.org / wristlock
+twbjj_ankeng   新店安城街2巷3號 — taiwanbjj.org
+twbjj_linkou   林口忠孝三路28號 — taiwanbjj.org
+twbjj_xinzhuang 新莊萬安街53號 — taiwanbjj.org
+twbjj_xizhi    汐止水源路一段122號1F — taiwanbjj.org
+wuja           永和民權路53號1樓 — wu-ja.com（課表圖為永和館；另有大直／古亭，距離以永和計）
+shuraba        板橋民生路二段226巷32號 — 公開地圖／社群（舊址曾列文化路；請以館方最新為準）
+10thplanet     松山復興北路369號B1 — 與 district「松山」及公開地點一致；公司登記另列信義基隆路一段398號4樓（若搬遷請更新）
+
+UNCERTAIN / FLAG
+- 10th Planet: Songshan Fuxing N vs company-registered Xinyi Keelung Rd — used Songshan listing matching site district.
+- Shuraba: Banqiao Minsheng Sec.2 lane address from public listings; confirm if they move again.
+- Wuja: multi-site; distance/transit for Yonghe schedule location only.
+- Geocoding: Nominatim road-level + curated MRT walk times; not surveyed GPS pins.

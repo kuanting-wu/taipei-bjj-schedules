@@ -117,6 +117,19 @@
   footer { padding: 1rem 1.5rem 2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--border); }
   footer a { color: var(--accent); }
 
+
+  .badge.access-easy { color: #86efac; border-color: #22c55e; }
+  .badge.access-ok { color: #fcd34d; border-color: #f59e0b; }
+  .badge.access-hard { color: #fca5a5; border-color: #ef4444; }
+  .tag.access-easy { color: #86efac; border-color: #22c55e; }
+  .tag.access-ok { color: #fcd34d; border-color: #f59e0b; }
+  .tag.access-hard { color: #fca5a5; border-color: #ef4444; }
+  .dist { font-size: .78rem; color: var(--muted); margin-top: .2rem; line-height: 1.35; }
+  .dist strong { color: var(--text); font-weight: 600; }
+  .matrix-gym-meta { display:block; font-size:.68rem; color:var(--muted); font-weight:400; margin-top:.2rem; line-height:1.3; }
+  .access-note { font-size:.8rem; color:var(--muted); margin:.35rem 0 0; max-width:52rem; }
+  .sort-controls { display:flex; flex-wrap:wrap; gap:.6rem; align-items:flex-end; }
+
   /* —— mobile —— */
   @media (max-width: 720px) {
     header { padding: 1rem; }
@@ -155,6 +168,7 @@
 <header>
   <h1>大台北柔術課表 · 時間軸統計</h1>
   <p>拖拉時間軸，看「此刻」有幾堂 Gi／No-Gi／Rolling · 亦可切矩陣／卡片 · 資料截至 2026-10-02</p>
+  <p class="access-note">距離以 <strong>Taiwanogi（延吉街）</strong> 為基準。直線公里 ≠ 交通方便度；另標捷運站、步行分鐘與約略通勤（含轉乘）。方便度：≤20分 easy · ≤40分 ok · 更遠／多轉 hard。</p>
 </header>
 
 <section class="scrubber" id="scrubber">
@@ -207,6 +221,28 @@
       <button type="button" class="chip on" data-type="unknown">未標清</button>
     </div>
   </div>
+  <div class="sort-controls">
+    <label>排序
+      <select id="sortBy">
+        <option value="default">預設（名單）</option>
+        <option value="km">距 Taiwanogi（近→遠）</option>
+        <option value="transitMin" selected>捷運通勤（快→慢）</option>
+        <option value="name">館名</option>
+      </select>
+    </label>
+    <label>交通方便度
+      <select id="accessFilter">
+        <option value="all">全部</option>
+        <option value="easy">僅 easy（≤約20分）</option>
+        <option value="easyok">easy＋ok（≤約40分）</option>
+        <option value="mrt">僅顯示捷運方便（easy＋ok）</option>
+      </select>
+    </label>
+    <label>最遠直線 km（0=不限）
+      <input type="range" id="maxKm" min="0" max="25" step="0.5" value="0" style="width:min(220px,100%)" />
+      <span id="maxKmLabel" style="font-size:.75rem;color:var(--muted)">不限</span>
+    </label>
+  </div>
 </div>
 
 <main>
@@ -222,7 +258,7 @@
 </main>
 
 <footer>
-  來源為各館官網／IG／FB 公開課表；時間軸統計依解析後的時段重疊計算，僅供參考。
+  來源為各館官網／IG／FB 公開課表；時間軸統計依解析後的時段重疊計算，僅供參考。距離／捷運以 Taiwanogi 為基準估算，非即時導航。
   <a href="https://github.com/kuanting-wu/taipei-bjj-schedules">GitHub</a> ·
   <a href="https://kuanting-wu.github.io/taipei-bjj-schedules/">Pages</a>
 </footer>
@@ -230,60 +266,60 @@
 <script>
 const DAYS = ["一","二","三","四","五","六","日"];
 const GYMS = [
-  { id:"taiwannogi", name:"Taiwanogi", district:"大安",
+  { id:"taiwannogi", name:"Taiwanogi", district:"大安", address:"台北市大安區延吉街131巷1弄26號B1", lat:25.043564, lng:121.554514, km:0.0, mrt:"忠孝敦化", walkMin:8, transit:"基準點（延吉街 · 近忠孝敦化／國父紀念館）", transitMin:0, access:"easy",
     sources:[{label:"IG 課表",url:"https://www.instagram.com/taiwannogi/p/DdwXbzvRsUS/"},{label:"官網",url:"https://www.taiwannogi.com/"},{label:"課表圖",url:"https://images.squarespace-cdn.com/content/v1/662f7814966d1f3bf331af4a/ba39b56e-ad08-4170-ade9-2f922ada42dc/New+Schedule+%284%29.png"}],
     image:"taiwannogi_october_schedule_clear.png", note:"週四滾到飽 NEW；幾乎全 No-Gi" },
-  { id:"10thplanet", name:"10th Planet Taipei", district:"松山",
+  { id:"10thplanet", name:"10th Planet Taipei", district:"松山", address:"台北市松山區復興北路369號B1（公司登記另列信義基隆路一段398號4樓）", lat:25.0605, lng:121.5442, km:2.2, mrt:"中山國中", walkMin:8, transit:"忠孝復興轉文湖至中山國中再步行 · 約20–25分", transitMin:22, access:"ok",
     sources:[{label:"官網課表",url:"https://www.10thplanettaipei.com/schedule"}],
     image:null, note:"全館 No-Gi；無獨立 open mat" },
-  { id:"wristlock", name:"腕鎖（土城）", district:"新北土城",
+  { id:"wristlock", name:"腕鎖（土城）", district:"新北土城", address:"新北市土城區中正路1號B1-2", lat:24.98523, lng:121.44865, km:12.5, mrt:"海山", walkMin:3, transit:"板南線直達海山 · 出口近", transitMin:38, access:"ok",
     sources:[{label:"官網",url:"https://wristlockjiujitsu.com/"},{label:"IG seminar",url:"https://www.instagram.com/wristlockjiujitsu/p/Dd3iYvoT2QF/"}],
     image:"taiwanbjj_wristlock_schedule.png", note:"台巴體系土城；平日 21:00 Open Mat（2026-03 圖）" },
-  { id:"wuja", name:"武甲", district:"大直／古亭／永和",
+  { id:"wuja", name:"武甲", district:"大直／古亭／永和", address:"新北市永和區民權路53號1樓（課表圖為永和館；另有大直／古亭）", lat:25.0115, lng:121.515, km:5.3, mrt:"頂溪", walkMin:8, transit:"板南至忠孝復興轉中和新蘆至頂溪再步行", transitMin:30, access:"ok",
     sources:[{label:"官網",url:"https://www.wu-ja.com/"},{label:"IG 永和",url:"https://www.instagram.com/martial_armour/p/DbX21UGnfJv/"}],
     image:"wuja_yonghe_schedule_clear.png", note:"自主對打未必純 BJJ" },
-  { id:"pma", name:"PMA 台北", district:"中山",
+  { id:"pma", name:"PMA 台北", district:"中山", address:"台北市中山區新生北路三段82巷33號1樓", lat:25.06713, lng:121.52642, km:3.9, mrt:"圓山", walkMin:12, transit:"忠孝復興轉淡水信義至圓山／雙連再步行", transitMin:32, access:"ok",
     sources:[{label:"IG 課表",url:"https://www.instagram.com/pmabjjtaipei/p/DdyJbPPosJu/"}],
     image:"pma_taipei_october_schedule_clear.png", note:"" },
-  { id:"dfa", name:"DFA 降龍", district:"中正",
+  { id:"dfa", name:"DFA 降龍", district:"中正", address:"台北市中正區杭州南路一段10號B1", lat:25.0425, lng:121.5255, km:2.9, mrt:"善導寺", walkMin:5, transit:"板南線直達善導寺 · 4號出口步行約5分", transitMin:18, access:"easy",
     sources:[{label:"IG 課表",url:"https://www.instagram.com/dragonfightart/p/Dd6i9y_NgRQ/"}],
     image:"dfa_october_2026_schedule_clear.png", note:"BJJ 班未標 Gi/No-Gi" },
-  { id:"haishan", name:"巴柔海山", district:"新北土城",
+  { id:"haishan", name:"巴柔海山", district:"新北土城", address:"新北市土城區清水路33號1F", lat:24.9865, lng:121.452, km:12.1, mrt:"海山", walkMin:8, transit:"板南線直達海山再步行清水路", transitMin:42, access:"hard",
     sources:[{label:"IG",url:"https://www.instagram.com/taiwanbjj_hs/p/DcQrXDou5Ye/"}],
     image:"taiwanbjj_haishan_schedule_clear.png", note:"體驗課表" },
 
-  { id:"twbjj_taipei", name:"台巴·台北本院", district:"中山吉林",
+  { id:"twbjj_taipei", name:"台巴·台北本院", district:"中山吉林", address:"台北市中山區吉林路12-3號B1", lat:25.0525, lng:121.5305, km:2.6, mrt:"松江南京", walkMin:8, transit:"忠孝新生轉松江南京 · 或步行／短程公車", transitMin:25, access:"ok",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/taipei/"},{label:"課表圖",url:"https://taiwanbjj.org/twbjj-wp-04/wp-content/uploads/2026/09/20260914%E5%8F%B0%E5%8C%97%E6%9C%AC%E9%99%A2%E8%AA%B2%E8%A1%A8-1.jpg"},{label:"Facebook",url:"https://www.facebook.com/taiwanbjj/"}],
     image:"taiwanbjj_taipei_jilin_schedule.png", note:"2026-09 課表；含多時段 Open Mat" },
-  { id:"twbjj_zhongzheng", name:"台巴·中正", district:"中正",
+  { id:"twbjj_zhongzheng", name:"台巴·中正", district:"中正", address:"台北市中正區南昌路一段153號2F", lat:25.0268, lng:121.5165, km:4.3, mrt:"古亭", walkMin:8, transit:"忠孝復興轉淡水信義／中和新蘆至古亭再步行", transitMin:28, access:"ok",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/zhongzheng/"},{label:"IG",url:"https://www.instagram.com/taiwanbjj_zhzh/"}],
     image:"taiwanbjj_zhongzheng_schedule.png", note:"平日 21:30 Open Mat" },
-  { id:"twbjj_zhonghe", name:"台巴·中和", district:"新北中和",
+  { id:"twbjj_zhonghe", name:"台巴·中和", district:"新北中和", address:"新北市中和區中正路755號2F", lat:25.0045, lng:121.488, km:8.0, mrt:"橋和", walkMin:6, transit:"轉環狀線／中和新蘆至橋和再步行", transitMin:40, access:"ok",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/zhonghe/"},{label:"IG",url:"https://www.instagram.com/taiwanbjj_zhonghe/"}],
     image:"taiwanbjj_zhonghe_schedule.png", note:"" },
-  { id:"twbjj_haishan", name:"台巴·海山", district:"新北土城",
+  { id:"twbjj_haishan", name:"台巴·海山", district:"新北土城", address:"新北市土城區清水路33號1F", lat:24.9865, lng:121.452, km:12.1, mrt:"海山", walkMin:8, transit:"板南線直達海山再步行清水路", transitMin:42, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/taiwan-bjj-branch/"},{label:"IG",url:"https://www.instagram.com/taiwanbjj_hs/"}],
     image:"taiwanbjj_haishan_schedule.png", note:"與中和同教練體系" },
-  { id:"twbjj_ankeng", name:"台巴·安坑", district:"新北新店",
+  { id:"twbjj_ankeng", name:"台巴·安坑", district:"新北新店", address:"新北市新店區安城街2巷3號", lat:24.962, lng:121.513, km:10.0, mrt:"安坑", walkMin:10, transit:"轉安坑輕軌／新店線 · 較偏遠", transitMin:55, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/ankeng/"},{label:"IG",url:"https://www.instagram.com/taiwanbjjankeng/"}],
     image:"taiwanbjj_ankeng_schedule.png", note:"課表偏週末／三五" },
-  { id:"twbjj_linkou", name:"台巴·林口", district:"新北林口",
+  { id:"twbjj_linkou", name:"台巴·林口", district:"新北林口", address:"新北市林口區忠孝三路28號", lat:25.07009, lng:121.362, km:19.6, mrt:"林口", walkMin:10, transit:"轉機場線至林口 · 約50–70分", transitMin:65, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/linkou/"},{label:"FB",url:"https://www.facebook.com/TWBJJLinkou/"}],
     image:"taiwanbjj_linkou_schedule.png", note:"" },
-  { id:"twbjj_xinzhuang", name:"台巴·新莊", district:"新北新莊",
+  { id:"twbjj_xinzhuang", name:"台巴·新莊", district:"新北新莊", address:"新北市新莊區萬安街53號", lat:25.02305, lng:121.42088, km:13.7, mrt:"丹鳳", walkMin:10, transit:"轉中和新蘆至丹鳳／新莊再步行", transitMin:50, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/xinzhuang/"}],
     image:"taiwanbjj_xinzhuang_schedule.png", note:"含瑜珈／TRX 非柔術時段已略" },
-  { id:"twbjj_xizhi", name:"台巴·汐止", district:"新北汐止",
+  { id:"twbjj_xizhi", name:"台巴·汐止", district:"新北汐止", address:"新北市汐止區水源路一段122號1F", lat:25.06204, lng:121.65548, km:10.4, mrt:"汐科", walkMin:15, transit:"板南至南港轉台鐵至汐科／汐止再步行 · 無近捷運", transitMin:55, access:"hard",
     sources:[{label:"分館頁",url:"https://taiwanbjj.org/en/xi-zhi/"}],
     image:"taiwanbjj_xizhi_schedule.png", note:"" },
 
-  { id:"ufcgym_dunnan", name:"UFC GYM 敦南", district:"大安",
+  { id:"ufcgym_dunnan", name:"UFC GYM 敦南", district:"大安", address:"台北市大安區安和路一段27號B1", lat:25.0398, lng:121.551, km:0.5, mrt:"忠孝敦化", walkMin:2, transit:"忠孝敦化5號出口步行約2分（同站圈）", transitMin:12, access:"easy",
     sources:[{label:"官網",url:"https://www.ufcgym.com.tw/"},{label:"FB 敦南",url:"https://www.facebook.com/UFCGYMTWDunhua/"},{label:"預約",url:"https://booking.ufcgym.com.tw/"}],
     image:"ufcgym_dunnan_schedule.png", note:"課表圖為 2023-05 公開版；現行請以 App／館內為準。無標 Open Mat" },
-  { id:"ufcgym_neihu", name:"UFC GYM 內科", district:"內湖",
+  { id:"ufcgym_neihu", name:"UFC GYM 內科", district:"內湖", address:"台北市內湖區洲子街55號1F", lat:25.0802, lng:121.574, km:4.5, mrt:"港墘", walkMin:1, transit:"需轉文湖線至港墘 · 2號出口步行約1分", transitMin:35, access:"ok",
     sources:[{label:"官網",url:"https://www.ufcgym.com.tw/"},{label:"FB 內湖",url:"https://www.facebook.com/UFCGYMTWNeihu/"},{label:"預約",url:"https://booking.ufcgym.com.tw/"}],
     image:"ufcgym_neihu_schedule.png", note:"課表圖為 2024-09 公開版；無標 Open Mat" },
-  { id:"shuraba", name:"修羅場", district:"板橋",
+  { id:"shuraba", name:"修羅場", district:"板橋", address:"新北市板橋區民生路二段226巷32號（公開資料；舊址曾列文化路）", lat:25.02198, lng:121.46938, km:8.9, mrt:"新埔", walkMin:8, transit:"板南線直達新埔再步行 · 約30–40分", transitMin:35, access:"ok",
     sources:[{label:"Facebook",url:"https://www.facebook.com/SRBMMA"}],
     image:"shuraba_facebook_schedule_update.png", note:"" }
 ];
@@ -567,6 +603,33 @@ const SLOTS = [
 
 const gymById = Object.fromEntries(GYMS.map(g => [g.id, g]));
 
+const ACCESS_RANK = { easy: 0, ok: 1, hard: 2 };
+function accessLabel(a) {
+  return ({easy:"捷運方便",ok:"尚可",hard:"較遠／多轉"})[a] || a;
+}
+function distLine(g) {
+  if (g.km == null) return "";
+  const walk = g.walkMin != null ? `步行${g.walkMin}分` : "";
+  const mrt = g.mrt ? `捷運${g.mrt}` : "";
+  const parts = [`${g.km} km`];
+  if (mrt || walk) parts.push([mrt, walk].filter(Boolean).join(" "));
+  if (g.transitMin != null && g.id !== "taiwannogi") parts.push(`約${g.transitMin}分`);
+  return parts.join(" · ");
+}
+function gymsOrdered() {
+  let list = GYMS.slice();
+  if (state.access === "easy") list = list.filter(g => g.access === "easy");
+  else if (state.access === "easyok" || state.access === "mrt") list = list.filter(g => g.access === "easy" || g.access === "ok");
+  if (state.maxKm > 0) list = list.filter(g => (g.km ?? 99) <= state.maxKm + 1e-9);
+  const key = state.sortBy;
+  if (key === "km") list.sort((a,b) => (a.km??99) - (b.km??99) || a.name.localeCompare(b.name, "zh"));
+  else if (key === "transitMin") list.sort((a,b) => (a.transitMin??999) - (b.transitMin??999) || (a.km??99) - (b.km??99));
+  else if (key === "name") list.sort((a,b) => a.name.localeCompare(b.name, "zh"));
+  // default: keep GYMS order but still filtered
+  return list;
+}
+
+
 function parseHM(s) {
   const m = String(s).trim().match(/^(\d{1,2}):(\d{2})$/);
   if (!m) return null;
@@ -607,7 +670,8 @@ const state = {
   day: "all", gym: "all",
   types: new Set(["gi","nogi","roll","unknown"]),
   q: "", view: "matrix",
-  scrubDay: "四", scrubMin: 20*60+40
+  scrubDay: "四", scrubMin: 20*60+40,
+  sortBy: "transitMin", access: "all", maxKm: 0
 };
 
 function typeLabel(t) {
@@ -663,9 +727,10 @@ function updateScrubber() {
       return `<div class="live-item" data-open="${iv.g}">
         <span class="badge ${iv.t}">${typeLabel(iv.t)}</span>
         <strong>${g.name}</strong>
+        <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span>
         <span>${iv.labelTime}</span>
         <span style="color:var(--muted)">${iv.title}</span>
-        <span style="color:var(--muted);font-size:.75rem">${g.district}</span>
+        <span style="color:var(--muted);font-size:.75rem">${g.district} · ${distLine(g)}</span>
       </div>`;
     }).join("");
   }
@@ -673,13 +738,15 @@ function updateScrubber() {
 
 function filteredSlots() {
   const q = state.q.trim().toLowerCase();
+  const allowed = new Set(gymsOrdered().map(g => g.id));
   return SLOTS.filter(s => {
     if (state.day !== "all" && s.d !== state.day) return false;
     if (state.gym !== "all" && s.g !== state.gym) return false;
+    if (state.gym === "all" && !allowed.has(s.g)) return false;
     if (!state.types.has(s.t)) return false;
     if (q) {
       const g = gymById[s.g];
-      if (!`${g.name} ${s.title} ${s.time} ${s.t}`.toLowerCase().includes(q)) return false;
+      if (!`${g.name} ${s.title} ${s.time} ${s.t} ${g.mrt||""} ${g.transit||""}`.toLowerCase().includes(q)) return false;
     }
     return true;
   });
@@ -700,7 +767,10 @@ function showDetail(gymId) {
     ).join("")}</div>`;
   }).join("");
   el.className = "open";
-  el.innerHTML = `<h2>${g.name} <span style="color:var(--muted);font-size:.9rem">${g.district}</span></h2>
+  el.innerHTML = `<h2>${g.name} <span style="color:var(--muted);font-size:.9rem">${g.district}</span>
+      <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></h2>
+    <p class="dist"><strong>${distLine(g)}</strong>${g.transit ? " · " + g.transit : ""}</p>
+    <p style="font-size:.85rem;color:var(--muted)">${g.address || ""}</p>
     <p>${g.note || ""}</p>
     <div class="links"><strong>資料來源：</strong>${links}</div>${img}
     <h3 style="margin-top:1rem">完整時段</h3>
@@ -710,10 +780,14 @@ function showDetail(gymId) {
 
 function renderMatrix() {
   const slots = filteredSlots();
-  const gymIds = state.gym === "all" ? GYMS.map(g => g.id) : [state.gym];
+  const gymIds = state.gym === "all" ? gymsOrdered().map(g => g.id) : [state.gym];
   const days = state.day === "all" ? DAYS : [state.day];
   let html = `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="day">星期</th>`;
-  gymIds.forEach(id => { html += `<th><button type="button" class="chip" style="width:100%" data-open="${id}">${gymById[id].name}</button></th>`; });
+  gymIds.forEach(id => {
+    const g = gymById[id];
+    html += `<th><button type="button" class="chip" style="width:100%" data-open="${id}">${g.name}</button>
+      <span class="matrix-gym-meta">${distLine(g)} · <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></span></th>`;
+  });
   html += `</tr></thead><tbody>`;
   days.forEach(d => {
     html += `<tr><td class="day">${d}</td>`;
@@ -732,19 +806,22 @@ function renderMatrix() {
 
 function renderCards() {
   const slots = filteredSlots();
-  const list = (state.gym === "all" ? GYMS : GYMS.filter(g => g.id === state.gym));
+  const list = (state.gym === "all" ? gymsOrdered() : GYMS.filter(g => g.id === state.gym));
   document.getElementById("cardsView").innerHTML = `<div class="gym-grid">${list.map(g => {
     const gs = slots.filter(s => s.g === g.id);
     const has = new Set(gs.map(s => s.t));
     return `<div class="gym-card" data-open="${g.id}">
-      <h3>${g.name}</h3>
+      <h3>${g.name} <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></h3>
       <div class="meta">${g.district}${g.note ? " · " + g.note : ""}</div>
-      <div class="tags">
+      <div class="dist">${distLine(g)}</div>
+      <div class="dist" style="margin-top:.15rem">${g.transit || ""}</div>
+      <div class="tags" style="margin-top:.65rem">
         ${has.has("gi")?'<span class="tag gi">Gi</span>':''}
         ${has.has("nogi")?'<span class="tag nogi">No-Gi</span>':''}
         ${has.has("roll")?'<span class="tag roll">Rolling</span>':''}
+        <span class="tag access-${g.access||"ok"}">${accessLabel(g.access)}</span>
       </div>
-      <p style="font-size:.8rem;color:var(--muted);margin:.75rem 0 0">來源 ${g.sources.length} 筆</p>
+      <p style="font-size:.8rem;color:var(--muted);margin:.75rem 0 0">${g.address || ""} · 來源 ${g.sources.length} 筆</p>
     </div>`;
   }).join("")}</div>`;
 }
@@ -755,9 +832,13 @@ function renderDay() {
   document.getElementById("dayView").innerHTML = `<div class="day-list">${days.map(d => {
     const list = slots.filter(s => s.d === d);
     return `<div class="day-block"><h4>星期${d}</h4>
-      ${list.length ? list.map(s => `<div class="slot ${s.t}" data-open="${s.g}" style="cursor:pointer">
-        <strong>${gymById[s.g].name}</strong> · ${typeLabel(s.t)} · ${s.time} · ${s.title}
-      </div>`).join("") : '<span class="empty">—</span>'}</div>`;
+      ${list.length ? list.map(s => {
+        const g = gymById[s.g];
+        return `<div class="slot ${s.t}" data-open="${s.g}" style="cursor:pointer">
+        <strong>${g.name}</strong> · ${typeLabel(s.t)} · ${s.time} · ${s.title}
+        <div class="dist">${distLine(g)} · <span class="badge access-${g.access||"ok"}">${accessLabel(g.access)}</span></div>
+      </div>`;
+      }).join("") : '<span class="empty">—</span>'}</div>`;
   }).join("")}</div>`;
 }
 
@@ -773,6 +854,15 @@ GYMS.forEach(g => { const o = document.createElement("option"); o.value = g.id; 
 
 document.getElementById("dayFilter").onchange = e => { state.day = e.target.value; render(); };
 gf.onchange = e => { state.gym = e.target.value; render(); };
+
+document.getElementById("sortBy").onchange = e => { state.sortBy = e.target.value; render(); updateScrubber(); };
+document.getElementById("accessFilter").onchange = e => { state.access = e.target.value; render(); updateScrubber(); };
+document.getElementById("maxKm").oninput = e => {
+  state.maxKm = +e.target.value;
+  document.getElementById("maxKmLabel").textContent = state.maxKm ? `≤ ${state.maxKm} km` : "不限";
+  render(); updateScrubber();
+};
+
 document.getElementById("q").oninput = e => { state.q = e.target.value; render(); };
 document.querySelectorAll(".chips .chip").forEach(btn => {
   btn.onclick = () => {
