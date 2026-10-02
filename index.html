@@ -1630,7 +1630,7 @@ function barRow(fillClass, lab, n, denom) {
   return `<div class="bar-row"><span class="lab" title="${tip}">${lab}</span><div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${pct}%"></div></div><span class="n" title="${tip}">${shown}</span></div>`;
 }
 
-/** Intervals for charts: at selected time, or all filtered (ignore slotsAtNow) */
+/** Intervals for charts + top counters: at selected time, or all filtered (ignore slotsAtNow) */
 function statsPool(actAtTime) {
   if (hasScrubTime()) return actAtTime || [];
   const allowed = new Set(gymsOrdered().map(g => g.id));
@@ -1981,6 +1981,7 @@ function updateScrubber() {
     else if (day) sdl.textContent = "· 星期" + day;
     else sdl.textContent = "· 請選星期";
   }
+  // Live-at-scrub intervals (for charts when a time is selected)
   let act = [];
   if (hasScrubTime()) {
     if (state.day === "all") {
@@ -1991,17 +1992,24 @@ function updateScrubber() {
     }
   }
   const allowedGyms = new Set(gymsOrdered().map(g => g.id));
+  const q = state.q.trim().toLowerCase();
   act = act.filter(iv => {
     if (state.gym !== "all" && iv.g !== state.gym) return false;
     if (state.gym === "all" && !allowedGyms.has(iv.g)) return false;
     if (!state.types.has(iv.t)) return false;
+    if (q) {
+      const g = gymById[iv.g];
+      if (!`${g.name} ${iv.title} ${iv.time} ${iv.t} ${g.mrt||""}`.toLowerCase().includes(q)) return false;
+    }
     return true;
   });
-  const nGi = act.filter(x => x.t === "gi").length;
-  const nNogi = act.filter(x => x.t === "nogi").length;
-  const nRoll = act.filter(x => x.t === "roll").length;
-  const nUnk = act.filter(x => x.t === "unknown").length;
-  const total = act.length;
+  // Top counters + compose: same pool as「課型」chart (full filtered day when no time)
+  const counterPool = statsPool(act);
+  const nGi = counterPool.filter(x => x.t === "gi").length;
+  const nNogi = counterPool.filter(x => x.t === "nogi").length;
+  const nRoll = counterPool.filter(x => x.t === "roll").length;
+  const nUnk = counterPool.filter(x => x.t === "unknown").length;
+  const total = counterPool.length;
   document.getElementById("nGi").textContent = nGi;
   document.getElementById("nNogi").textContent = nNogi;
   document.getElementById("nRoll").textContent = nRoll;
@@ -2023,10 +2031,17 @@ function updateScrubber() {
     });
   }
   const pct = (n) => total ? Math.round(n / total * 100) : 0;
-  document.getElementById("composeLegend").textContent = hasScrubTime()
-    ? (`Gi ${nGi}（${pct(nGi)}%） · No-Gi ${nNogi}（${pct(nNogi)}%） · Rolling ${nRoll}（${pct(nRoll)}%） · 未分類 ${nUnk}（${pct(nUnk)}%）` +
-      ` · 星期${day} ${fmtMin(min)}`)
-    : "未選時刻 — 統計／紅線／時間篩選暫停（顯示全部課表）";
+  const unitNote = isStatPct() ? "佔比" : "數量";
+  let scopeNote;
+  if (hasScrubTime()) {
+    scopeNote = state.day === "all"
+      ? (`全部星期 · 此刻 ${fmtMin(min)}`)
+      : (`星期${day || state.day} · 此刻 ${fmtMin(min)}`);
+  } else {
+    scopeNote = state.day === "all" ? "篩選課表合計（未選時刻）" : (`星期${state.day} 篩選合計（未選時刻）`);
+  }
+  document.getElementById("composeLegend").textContent =
+    `Gi ${nGi}（${pct(nGi)}%） · No-Gi ${nNogi}（${pct(nNogi)}%） · Rolling ${nRoll}（${pct(nRoll)}%） · 未分類 ${nUnk}（${pct(nUnk)}%） · ${scopeNote}`;
   updateTimeMark();
   renderCharts(act);
 }
