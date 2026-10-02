@@ -407,22 +407,38 @@
   #appLayout.layout-stacked .slot-views > details.panel {
     margin-top: .35rem;
   }
-  /* stats RIGHT: filters|stats ; views|stats ; detail ; map */
+  /* stats RIGHT: filters|split|stats ; views|split|stats ; detail ; map */
   #appLayout.layout-stats-right {
-    grid-template-columns: 1fr minmax(260px, 340px);
+    --stats-col: 300px;
+    grid-template-columns: minmax(0, 1fr) 8px var(--stats-col);
     grid-template-areas:
-      "about about"
-      "filters stats"
-      "views stats"
-      "detail detail"
-      "map map";
+      "about about about"
+      "filters split stats"
+      "views split stats"
+      "detail detail detail"
+      "map map map";
   }
   #appLayout.layout-stats-right .slot-stats > details.panel {
-    position: sticky; top: .5rem; margin-left: .5rem; margin-right: 1.5rem;
+    position: sticky; top: .5rem; margin-left: .25rem; margin-right: 1.5rem;
     max-height: calc(100vh - 1rem); overflow: auto;
   }
-  #appLayout.layout-stats-right .slot-filters > details.panel { margin-right: .5rem; margin-bottom: .35rem; }
-  #appLayout.layout-stats-right .slot-views > details.panel { margin-right: .5rem; margin-top: .35rem; }
+  #appLayout.layout-stats-right .slot-filters > details.panel { margin-right: .25rem; margin-bottom: .35rem; }
+  #appLayout.layout-stats-right .slot-views > details.panel { margin-right: .25rem; margin-top: .35rem; }
+  .slot-split { grid-area: split; display: none; }
+  #appLayout.layout-stats-right .slot-split {
+    display: flex; align-items: stretch; justify-content: center;
+    cursor: col-resize; user-select: none; touch-action: none;
+    margin: .75rem 0; z-index: 5;
+  }
+  #appLayout.layout-stats-right .slot-split .split-handle {
+    width: 4px; border-radius: 999px; background: var(--border);
+    transition: background .15s ease;
+  }
+  #appLayout.layout-stats-right .slot-split:hover .split-handle,
+  #appLayout.layout-stats-right .slot-split.dragging .split-handle {
+    background: #ef4444;
+  }
+  body.split-dragging { cursor: col-resize; user-select: none; }
   /* stacked: filters next to data, stats after views */
   #appLayout.layout-stacked {
     grid-template-columns: 1fr;
@@ -442,11 +458,22 @@
   .slot-detail { grid-area: detail; }
 
   .time-filter {
-    margin-top: .85rem; padding-top: .85rem; border-top: 1px solid var(--border);
+    margin-top: .75rem; padding-top: .75rem; border-top: 1px solid var(--border);
   }
-  .time-filter .scrubber-top { margin-bottom: .5rem; }
+  .time-filter .scrubber-top.compact {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
+    margin-bottom: .35rem; justify-content: space-between;
+  }
+  .time-filter .time-label {
+    font-size: .8rem; color: var(--muted); display: flex; align-items: baseline; gap: .35rem;
+    flex-direction: row; margin: 0;
+  }
+  .time-filter .time-label #clockLabel {
+    font-size: 1.05rem; font-weight: 700; color: var(--accent); letter-spacing: .02em;
+  }
+  .time-filter .day-inline { font-size: .8rem; font-weight: 600; color: var(--muted); }
   .time-rail {
-    position: relative; margin: .35rem 0 .15rem;
+    position: relative; margin: .2rem 0 .1rem;
   }
   .time-rail input[type="range"] {
     width: 100%; accent-color: #ef4444; position: relative; z-index: 2;
@@ -480,6 +507,7 @@
       grid-template-areas:
         "about" "filters" "views" "stats" "detail" "map";
     }
+    #appLayout.layout-stats-right .slot-split { display: none; }
     #appLayout.layout-stats-right .slot-stats > details.panel {
       position: static; margin-left: 1.5rem; margin-right: 1.5rem;
     }
@@ -626,11 +654,13 @@
   </div>
 </div>
   <div class="time-filter" id="scrubber">
-    <div class="scrubber-top">
-      <div class="now-clock">此刻 <span id="clockLabel">20:40</span> <span id="scrubDayLabel" style="font-size:.95rem;font-weight:600;color:var(--muted)">· 星期四</span></div>
+    <div class="scrubber-top compact">
+      <label class="time-label">此刻
+        <span id="clockLabel">20:40</span>
+        <span id="scrubDayLabel" class="day-inline">· 星期四</span>
+      </label>
       <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
     </div>
-    <p class="align-hint" style="margin:0 0 .45rem">拖曳時間軸標示「此刻」（對齊檢視<strong style="color:#fca5a5">紅線</strong>）。類型旁可勾：只留此刻有課的道館欄／只留此刻進行中的課。</p>
     <div class="time-rail">
       <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
     </div>
@@ -1274,6 +1304,58 @@ function updateMap() {
 
 
 
+
+const SPLIT_STORE = "bjj-stats-col-w-v1";
+function applyStatsColWidth(px) {
+  const el = document.getElementById("appLayout");
+  if (!el) return;
+  const w = Math.round(Math.min(560, Math.max(220, px)));
+  el.style.setProperty("--stats-col", w + "px");
+  try { localStorage.setItem(SPLIT_STORE, String(w)); } catch (_) {}
+  return w;
+}
+function loadStatsColWidth() {
+  let w = 300;
+  try {
+    const saved = +localStorage.getItem(SPLIT_STORE);
+    if (saved >= 220 && saved <= 560) w = saved;
+  } catch (_) {}
+  applyStatsColWidth(w);
+}
+function initSplitter() {
+  loadStatsColWidth();
+  const split = document.getElementById("layoutSplitter");
+  const board = document.getElementById("appLayout");
+  if (!split || !board) return;
+  let dragging = false;
+  const onMove = (clientX) => {
+    const rect = board.getBoundingClientRect();
+    // width of right column from right edge
+    const fromRight = rect.right - clientX;
+    applyStatsColWidth(fromRight - 4); // account for splitter
+    if (typeof gymMap !== "undefined" && gymMap) gymMap.invalidateSize();
+  };
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    split.classList.remove("dragging");
+    document.body.classList.remove("split-dragging");
+  };
+  split.addEventListener("pointerdown", (e) => {
+    if (!board.classList.contains("layout-stats-right")) return;
+    if (window.matchMedia("(max-width: 900px)").matches) return;
+    dragging = true;
+    split.classList.add("dragging");
+    document.body.classList.add("split-dragging");
+    split.setPointerCapture(e.pointerId);
+    onMove(e.clientX);
+    e.preventDefault();
+  });
+  split.addEventListener("pointermove", (e) => { if (dragging) onMove(e.clientX); });
+  split.addEventListener("pointerup", end);
+  split.addEventListener("pointercancel", end);
+}
+
 const LAYOUT_STORE = "bjj-layout-preset-v2";
 function applyLayout(name) {
   const el = document.getElementById("appLayout");
@@ -1287,6 +1369,7 @@ function applyLayout(name) {
   });
   try { localStorage.setItem(LAYOUT_STORE, layout); } catch (_) {}
   if (typeof gymMap !== "undefined" && gymMap) setTimeout(() => gymMap.invalidateSize(), 120);
+  if (layout === "stats-right") loadStatsColWidth();
 }
 function initLayout() {
   let layout = "stats-top"; /* filters sit directly above 課表 */
@@ -1713,6 +1796,7 @@ document.body.addEventListener("click", e => {
 
 initPanels();
 initLayout();
+initSplitter();
 syncToTaipeiNow();
 updateScrubber();
 render();
