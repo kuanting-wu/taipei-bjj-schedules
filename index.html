@@ -410,7 +410,7 @@
   /* stats RIGHT: filters|split|stats ; views|split|stats ; detail ; map */
   #appLayout.layout-stats-right {
     --stats-col: 300px;
-    grid-template-columns: minmax(0, 1fr) 8px var(--stats-col);
+    grid-template-columns: minmax(0, 1fr) 16px var(--stats-col);
     grid-template-areas:
       "about about about"
       "filters split stats"
@@ -422,22 +422,38 @@
     position: sticky; top: .5rem; margin-left: .25rem; margin-right: 1.5rem;
     max-height: calc(100vh - 1rem); overflow: auto;
   }
-  #appLayout.layout-stats-right .slot-filters > details.panel { margin-right: .25rem; margin-bottom: .35rem; }
-  #appLayout.layout-stats-right .slot-views > details.panel { margin-right: .25rem; margin-top: .35rem; }
+  #appLayout.layout-stats-right .slot-filters > details.panel { margin-right: 0; margin-bottom: .35rem; }
+  #appLayout.layout-stats-right .slot-views > details.panel { margin-right: 0; margin-top: .35rem; }
+  #appLayout.layout-stats-right .slot-stats > details.panel { margin-left: 0; }
   .slot-split { grid-area: split; display: none; }
+  #appLayout.layout-stats-right {
+    /* ensure 3-col track is wide enough to see the handle */
+  }
   #appLayout.layout-stats-right .slot-split {
     display: flex; align-items: stretch; justify-content: center;
     cursor: col-resize; user-select: none; touch-action: none;
-    margin: .75rem 0; z-index: 5;
+    margin: 0; z-index: 8; min-width: 14px; width: 100%;
+    background: linear-gradient(90deg, transparent, rgba(167,139,250,.18), transparent);
+    border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+    align-self: stretch;
   }
   #appLayout.layout-stats-right .slot-split .split-handle {
-    width: 4px; border-radius: 999px; background: var(--border);
-    transition: background .15s ease;
+    width: 6px; min-height: 48px; align-self: center; height: 40%;
+    border-radius: 999px; background: #a78bfa;
+    box-shadow: 0 0 0 2px rgba(167,139,250,.35), 0 0 10px rgba(167,139,250,.45);
+    transition: background .15s ease, box-shadow .15s ease;
   }
   #appLayout.layout-stats-right .slot-split:hover .split-handle,
   #appLayout.layout-stats-right .slot-split.dragging .split-handle {
     background: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239,68,68,.45), 0 0 12px rgba(239,68,68,.55);
   }
+  #appLayout.layout-stats-right .slot-split::after {
+    content: "⟷"; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); font-size: .65rem; color: #c4b5fd;
+    pointer-events: none; opacity: .85;
+  }
+  #appLayout.layout-stats-right .slot-split { position: relative; }
   body.split-dragging { cursor: col-resize; user-select: none; }
   /* stacked: filters next to data, stats after views */
   #appLayout.layout-stacked {
@@ -472,6 +488,11 @@
     font-size: 1.05rem; font-weight: 700; color: var(--accent); letter-spacing: .02em;
   }
   .time-filter .day-inline { font-size: .8rem; font-weight: 600; color: var(--muted); }
+  .time-filter .time-toggles { margin: .4rem 0 .35rem; }
+  .time-filter.no-time #clockLabel { color: var(--muted); font-weight: 600; }
+  .time-filter.no-time .time-rail { opacity: .45; }
+  .time-filter.no-time .tick-row .now-mark { display: none; }
+  .time-filter.no-time .time-toggles { opacity: .55; }
   .time-rail {
     position: relative; margin: .2rem 0 .1rem;
   }
@@ -593,6 +614,9 @@
     </div>
   </div>
 </details></div>
+<div class="layout-slot slot-split" id="layoutSplitter" role="separator" aria-orientation="vertical" aria-valuemin="220" aria-valuemax="560" aria-label="拖曳調整左側課表與右側統計寬度" title="拖曳調整寬度">
+  <div class="split-handle" aria-hidden="true"></div>
+</div>
 <div class="layout-slot slot-filters"><details class="panel controls-panel" id="filtersPanel" data-panel="filters" open>
   <summary class="panel-sum">篩選與時間軸 <span class="panel-hint">星期 · 類型 · 此刻紅線</span></summary>
   <div class="panel-body">
@@ -618,16 +642,6 @@
       <button type="button" class="chip nogi on" data-type="nogi"><span class="dot nogi"></span>No-Gi</button>
       <button type="button" class="chip roll on" data-type="roll"><span class="dot roll"></span>Rolling</button>
       <button type="button" class="chip unk on" data-type="unknown"><span class="dot unk"></span>未分類</button>
-    </div>
-    <div class="chips time-toggles" style="margin-top:.5rem">
-      <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
-        <input type="checkbox" id="gymsAtNow" style="accent-color:#ef4444" />
-        顯示所選時間道館
-      </label>
-      <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
-        <input type="checkbox" id="slotsAtNow" style="accent-color:#ef4444" />
-        顯示所選時間課程
-      </label>
     </div>
   </div>
   <div class="sort-controls">
@@ -656,10 +670,21 @@
   <div class="time-filter" id="scrubber">
     <div class="scrubber-top compact">
       <label class="time-label">此刻
-        <span id="clockLabel">20:40</span>
-        <span id="scrubDayLabel" class="day-inline">· 星期四</span>
+        <span id="clockLabel">—</span>
+        <span id="scrubDayLabel" class="day-inline"></span>
       </label>
       <button type="button" class="chip" id="jumpNow" title="跳到現在（台北）">跳到現在</button>
+      <button type="button" class="chip" id="clearScrub" title="取消選取時刻（顯示全部）">清除時刻</button>
+    </div>
+    <div class="chips time-toggles">
+      <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
+        <input type="checkbox" id="gymsAtNow" checked style="accent-color:#ef4444" />
+        顯示所選時間道館
+      </label>
+      <label class="chip" style="display:inline-flex;align-items:center;gap:.35rem;cursor:pointer">
+        <input type="checkbox" id="slotsAtNow" checked style="accent-color:#ef4444" />
+        顯示所選時間課程
+      </label>
     </div>
     <div class="time-rail">
       <input type="range" id="timeRange" min="360" max="1380" step="5" value="1240" />
@@ -1181,10 +1206,11 @@ const state = {
   day: "四", gym: "all",
   types: new Set(["gi","nogi","roll","unknown"]),
   q: "", view: "matrix",
-  scrubMin: 12*60,
+  scrubMin: null, // null = no selected time
   sortBy: "transitMin", access: "all", maxKm: 0,
-  gymsAtNow: false, slotsAtNow: false
+  gymsAtNow: true, slotsAtNow: true
 };
+function hasScrubTime() { return state.scrubMin != null && Number.isFinite(state.scrubMin); }
 function taipeiNowDate() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
 }
@@ -1203,7 +1229,13 @@ function syncToTaipeiNow() {
   const df = document.getElementById("dayFilter");
   if (df) df.value = state.day;
   const tr = document.getElementById("timeRange");
-  if (tr) tr.value = String(state.scrubMin);
+  if (tr) { tr.value = String(state.scrubMin); tr.disabled = false; }
+}
+function clearScrubTime() {
+  state.scrubMin = null;
+  const tr = document.getElementById("timeRange");
+  // keep thumb position for UX but treat as unselected until user drags again
+  if (tr) tr.disabled = false;
 }
 /** Shared day for scrubber + align: explicit filter, else Taipei today */
 function scrubViewDay() {
@@ -1387,7 +1419,9 @@ function updateTimeMark() {
   const mark = document.getElementById("timeNowMark");
   const range = document.getElementById("timeRange");
   if (!mark || !range) return;
-  const min = +range.min, max = +range.max, v = +range.value;
+  if (!hasScrubTime()) { mark.style.display = "none"; return; }
+  mark.style.display = "";
+  const min = +range.min, max = +range.max, v = state.scrubMin;
   const pct = (v - min) / (max - min);
   mark.style.left = (pct * 100) + "%";
 }
@@ -1434,11 +1468,16 @@ function renderCharts(act) {
 function updateScrubber() {
   const day = scrubViewDay();
   const min = state.scrubMin;
-  document.getElementById("clockLabel").textContent = fmtMin(min);
-  document.getElementById("timeRange").value = String(min);
+  const scrubRoot = document.getElementById("scrubber");
+  if (scrubRoot) scrubRoot.classList.toggle("no-time", !hasScrubTime());
+  document.getElementById("clockLabel").textContent = hasScrubTime() ? fmtMin(min) : "未選";
+  const tr = document.getElementById("timeRange");
+  if (tr && hasScrubTime()) tr.value = String(min);
   const sdl = document.getElementById("scrubDayLabel");
-  if (sdl) sdl.textContent = "· 星期" + day + (state.day === "all" ? "（今天）" : "");
-  let act = activeAt(day, min);
+  if (sdl) sdl.textContent = hasScrubTime()
+    ? ("· 星期" + day + (state.day === "all" ? "（今天）" : ""))
+    : "· 未選時刻";
+  let act = hasScrubTime() ? activeAt(day, min) : [];
   const allowedGyms = new Set(gymsOrdered().map(g => g.id));
   act = act.filter(iv => {
     if (state.gym !== "all" && iv.g !== state.gym) return false;
@@ -1472,9 +1511,10 @@ function updateScrubber() {
     });
   }
   const pct = (n) => total ? Math.round(n / total * 100) : 0;
-  document.getElementById("composeLegend").textContent =
-    `Gi ${nGi}（${pct(nGi)}%） · No-Gi ${nNogi}（${pct(nNogi)}%） · Rolling ${nRoll}（${pct(nRoll)}%） · 未分類 ${nUnk}（${pct(nUnk)}%）` +
-    ` · 星期${day} ${fmtMin(min)}`;
+  document.getElementById("composeLegend").textContent = hasScrubTime()
+    ? (`Gi ${nGi}（${pct(nGi)}%） · No-Gi ${nNogi}（${pct(nNogi)}%） · Rolling ${nRoll}（${pct(nRoll)}%） · 未分類 ${nUnk}（${pct(nUnk)}%）` +
+      ` · 星期${day} ${fmtMin(min)}`)
+    : "未選時刻 — 統計／紅線／時間篩選暫停（顯示全部課表）";
   updateTimeMark();
   renderCharts(act);
 }
@@ -1498,7 +1538,7 @@ function slotMatchesFilters(s) {
 /** Gyms for matrix/align; optionally only those with a class at scrubber time */
 function gymsForScheduleViews() {
   let list = state.gym === "all" ? gymsOrdered() : GYMS.filter(g => g.id === state.gym);
-  if (!state.gymsAtNow) return list;
+  if (!state.gymsAtNow || !hasScrubTime()) return list;
   const dayNow = scrubViewDay();
   const min = state.scrubMin;
   const allowed = new Set(gymsOrdered().map(g => g.id));
@@ -1518,7 +1558,7 @@ function filteredSlots() {
     if (state.gym !== "all" && s.g !== state.gym) return false;
     if (state.gym === "all" && !allowed.has(s.g)) return false;
     if (!state.types.has(s.t)) return false;
-    if (state.slotsAtNow && !slotActiveAt(s, dayNow, min)) return false;
+    if (state.slotsAtNow && hasScrubTime() && !slotActiveAt(s, dayNow, min)) return false;
     if (q) {
       const g = gymById[s.g];
       if (!`${g.name} ${s.title} ${s.time} ${s.t} ${g.mrt||""} ${g.transit||""}`.toLowerCase().includes(q)) return false;
@@ -1587,11 +1627,14 @@ function renderAlign() {
   const hours = [];
   for (let h = 6; h <= 23; h++) hours.push(h);
   const nowMin = state.scrubMin;
-  const showNow = nowMin >= ALIGN_START && nowMin <= ALIGN_END;
+  const showNow = hasScrubTime() && nowMin >= ALIGN_START && nowMin <= ALIGN_END;
   const nowTop = (nowMin - ALIGN_START) * ALIGN_PX;
   const cols = Math.max(1, gyms.length);
 
-  let html = `<p class="align-hint">星期<strong>${day}</strong>${state.day === "all" ? "（篩選＝全部 → 台北今天）" : ""} · 直軸＝時間 · 欄＝道館。課表上的<strong style="color:#fca5a5">紅線＝篩選「此刻」${fmtMin(nowMin)}</strong>。</p>`;
+  let html = `<p class="align-hint">星期<strong>${day}</strong>${state.day === "all" ? "（篩選＝全部 → 台北今天）" : ""} · 直軸＝時間 · 欄＝道館。` +
+    (hasScrubTime()
+      ? `課表上的<strong style="color:#fca5a5">紅線＝篩選「此刻」${fmtMin(nowMin)}</strong>。`
+      : `<span style="color:var(--muted)">未選時刻（無紅線／時間篩選）。</span>`) + `</p>`;
   html += `<div class="align-wrap"><div class="align-board" style="--cols:${cols};--pxm:${ALIGN_PX}">`;
 
   // sticky header row
@@ -1625,7 +1668,7 @@ function renderAlign() {
       const end = Math.min(iv.end, ALIGN_END);
       const top = (start - ALIGN_START) * ALIGN_PX;
       const hpx = Math.max(16, (end - start) * ALIGN_PX - 2);
-      const live = iv.start <= nowMin && nowMin < iv.end;
+      const live = hasScrubTime() && iv.start <= nowMin && nowMin < iv.end;
       const laneW = 100 / lanes;
       const left = iv.lane * laneW;
       const w = laneW - 1.5;
@@ -1661,7 +1704,9 @@ function renderMatrix() {
   const gymIds = gymsForScheduleViews().map(g => g.id);
   const days = state.day === "all" ? DAYS : [state.day];
   const dayNow = scrubViewDay();
-  let html = `<p class="matrix-now-hint">紅框＝篩選此刻 <strong>${fmtMin(state.scrubMin)}</strong>（星期${dayNow}）進行中的課</p>`;
+  let html = hasScrubTime()
+    ? `<p class="matrix-now-hint">紅框＝篩選此刻 <strong>${fmtMin(state.scrubMin)}</strong>（星期${dayNow}）進行中的課</p>`
+    : `<p class="matrix-now-hint" style="color:var(--muted)">未選時刻 — 顯示全部（點時間軸或「跳到現在」）</p>`;
   html += `<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="day">星期</th>`;
   gymIds.forEach(id => {
     const g = gymById[id];
@@ -1685,7 +1730,7 @@ function renderMatrix() {
       html += `<td data-open="${id}">`;
       if (!cell.length) html += `<span class="empty">—</span>`;
       else cell.forEach(s => {
-        const live = slotActiveAt(s, scrubViewDay(), state.scrubMin);
+        const live = hasScrubTime() && slotActiveAt(s, scrubViewDay(), state.scrubMin);
         html += `<div class="slot ${s.t}${live ? " live-now" : ""}"><strong>${typeLabel(s.t)}</strong> ${s.time}<br/>${s.title}</div>`;
       });
       html += `</td>`;
@@ -1776,16 +1821,28 @@ document.querySelectorAll(".view-tabs button").forEach(btn => {
   };
 });
 document.getElementById("timeRange").oninput = e => {
-  state.scrubMin = +e.target.value;
+  state.scrubMin = +e.target.value; // selecting/dragging sets a time
   updateScrubber();
   render();
 };
 const gymsAtNowEl = document.getElementById("gymsAtNow");
 const slotsAtNowEl = document.getElementById("slotsAtNow");
-if (gymsAtNowEl) gymsAtNowEl.onchange = e => { state.gymsAtNow = !!e.target.checked; updateScrubber(); render(); };
-if (slotsAtNowEl) slotsAtNowEl.onchange = e => { state.slotsAtNow = !!e.target.checked; updateScrubber(); render(); };
+if (gymsAtNowEl) {
+  gymsAtNowEl.checked = true;
+  gymsAtNowEl.onchange = e => { state.gymsAtNow = !!e.target.checked; updateScrubber(); render(); };
+}
+if (slotsAtNowEl) {
+  slotsAtNowEl.checked = true;
+  slotsAtNowEl.onchange = e => { state.slotsAtNow = !!e.target.checked; updateScrubber(); render(); };
+}
 document.getElementById("jumpNow").onclick = () => {
   syncToTaipeiNow();
+  updateScrubber();
+  render();
+};
+const clearScrubBtn = document.getElementById("clearScrub");
+if (clearScrubBtn) clearScrubBtn.onclick = () => {
+  clearScrubTime();
   updateScrubber();
   render();
 };
