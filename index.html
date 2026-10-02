@@ -52,23 +52,7 @@
     width: 100%; accent-color: var(--accent); cursor: pointer; height: 1.5rem;
   }
   .tick-row { display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); margin-top: .15rem; }
-  .live-list { max-height: 220px; overflow: auto; display: grid; gap: .4rem; }
-  .live-item {
-    display: flex; flex-wrap: wrap; gap: .35rem .5rem; align-items: baseline;
-    padding: .4rem .55rem; border-radius: 8px; background: #0f1419; border: 1px solid var(--border);
-    font-size: .85rem; cursor: pointer;
-  }
-  .live-item:hover { border-color: var(--accent); }
-  .live-item.base { border-color: var(--accent); background: rgba(167,139,250,.08); }
-  .live-item.base strong { color: var(--accent); }
   .live-item.rival { border-color: #ef4444; background: rgba(239,68,68,.07); }
-  .live-item.rival strong { color: #fca5a5; }
-  .live-item.rival:hover { border-color: #f87171; }
-  .live-dist {
-    font-size: .68rem; color: var(--muted); letter-spacing: .01em;
-    margin-left: auto; white-space: nowrap;
-  }
-  .live-item .title-muted { color: var(--muted); font-size: .8rem; flex: 1 1 8rem; min-width: 0; }
   .badge { font-size: .7rem; padding: .1rem .4rem; border-radius: 999px; border: 1px solid; }
   .badge.gi { color: #93c5fd; border-color: var(--gi); }
   .badge.nogi { color: #86efac; border-color: var(--nogi); }
@@ -358,27 +342,38 @@
   #appLayout {
     display: grid; gap: 0; padding-bottom: 1rem;
     grid-template-columns: 1fr;
+    /* default = stats-top: stats above, then filters glued to views */
     grid-template-areas:
       "about"
-      "filters"
       "stats"
+      "filters"
       "views"
       "detail"
       "map";
   }
   #appLayout > .layout-slot { min-width: 0; }
   #appLayout .layout-slot > details.panel { margin-left: 1.5rem; margin-right: 1.5rem; }
-  /* stats TOP (default desktop) */
+  /* stats TOP: about → stats → filters → views → detail → map */
   #appLayout.layout-stats-top {
+    grid-template-columns: 1fr;
     grid-template-areas:
       "about"
-      "filters"
       "stats"
+      "filters"
       "views"
       "detail"
       "map";
   }
-  /* stats RIGHT */
+  /* tighten filters→views so they read as one block */
+  #appLayout.layout-stats-top .slot-filters > details.panel,
+  #appLayout.layout-stacked .slot-filters > details.panel {
+    margin-bottom: .35rem;
+  }
+  #appLayout.layout-stats-top .slot-views > details.panel,
+  #appLayout.layout-stacked .slot-views > details.panel {
+    margin-top: .35rem;
+  }
+  /* stats RIGHT: filters|stats ; views|stats ; detail ; map */
   #appLayout.layout-stats-right {
     grid-template-columns: 1fr minmax(260px, 340px);
     grid-template-areas:
@@ -390,17 +385,18 @@
   }
   #appLayout.layout-stats-right .slot-stats > details.panel {
     position: sticky; top: .5rem; margin-left: .5rem; margin-right: 1.5rem;
+    max-height: calc(100vh - 1rem); overflow: auto;
   }
-  #appLayout.layout-stats-right .slot-filters > details.panel { margin-right: .5rem; }
-  #appLayout.layout-stats-right .slot-views > details.panel { margin-right: .5rem; }
-  /* stacked = same as single column */
+  #appLayout.layout-stats-right .slot-filters > details.panel { margin-right: .5rem; margin-bottom: .35rem; }
+  #appLayout.layout-stats-right .slot-views > details.panel { margin-right: .5rem; margin-top: .35rem; }
+  /* stacked: filters next to data, stats after views */
   #appLayout.layout-stacked {
     grid-template-columns: 1fr;
     grid-template-areas:
       "about"
       "filters"
-      "stats"
       "views"
+      "stats"
       "detail"
       "map";
   }
@@ -429,7 +425,6 @@
     position: absolute; top: -6px; bottom: -2px; width: 2px; background: #ef4444;
     box-shadow: 0 0 6px #ef4444; pointer-events: none; transform: translateX(-1px);
   }
-  .live-list { max-height: 180px; }
 
   .chart-block { margin: .65rem 0 .25rem; }
   .chart-block h4 { margin: 0 0 .4rem; font-size: .85rem; color: var(--muted); font-weight: 600; }
@@ -449,7 +444,7 @@
     #appLayout.layout-stats-right {
       grid-template-columns: 1fr;
       grid-template-areas:
-        "about" "filters" "stats" "views" "detail" "map";
+        "about" "filters" "views" "stats" "detail" "map";
     }
     #appLayout.layout-stats-right .slot-stats > details.panel {
       position: static; margin-left: 1.5rem; margin-right: 1.5rem;
@@ -478,8 +473,6 @@
     table.matrix th { min-width: 8.5rem; max-width: 11rem; padding: .55rem .4rem; }
     table.matrix th, table.matrix td { padding: .4rem .35rem; }
     .gym-grid { grid-template-columns: 1fr; }
-    .live-list { max-height: 40vh; }
-    .live-item { flex-direction: column; align-items: flex-start; gap: .2rem; padding: .6rem; }
     #detail { padding: 1rem; }
     .chips { width: 100%; }
     .chip { flex: 1 1 auto; text-align: center; padding: .5rem .6rem; }
@@ -502,21 +495,43 @@
 </header>
 
 <div class="layout-bar" id="layoutBar">
-  <span class="lb"><strong style="color:var(--text)">統計顯示位置</strong></span>
-  <button type="button" class="chip on" data-layout="stats-top">統計在上</button>
-  <button type="button" class="chip" data-layout="stats-right">統計在右</button>
-  <button type="button" class="chip" data-layout="stacked">堆疊（直排）</button>
-  <span class="lb" style="margin-left:.5rem">地圖固定在整頁最下方</span>
+  <span class="lb"><strong style="color:var(--text)">統計位置</strong>（篩選永遠貼著課表）</span>
+  <button type="button" class="chip on" data-layout="stats-top" title="統計 → 篩選 → 課表">統計在上</button>
+  <button type="button" class="chip" data-layout="stats-right" title="篩選+課表在左，統計貼右">統計在右</button>
+  <button type="button" class="chip" data-layout="stacked" title="篩選 → 課表 → 統計">堆疊</button>
+  <span class="lb" style="margin-left:.5rem">地圖在最下方</span>
 </div>
 
 <div id="appLayout" class="layout-stats-top">
-  <div class="layout-slot slot-about"><details class="panel" id="aboutPanel" data-panel="about">
+<div class="layout-slot slot-about"><details class="panel" id="aboutPanel" data-panel="about">
   <summary class="panel-sum">說明 <span class="panel-hint">距離基準 · 方便度</span></summary>
   <div class="panel-body">
   <p class="access-note" style="margin:0;max-width:none">距離以 <strong>Taiwanogi（延吉街）</strong> 為基準。每館顯示「距離 km · 預估通勤分」數字；方便度標籤：≤20分 easy · ≤40分 ok · 更遠／多轉 hard。鄰近對手館（紅）＝ easy 或 ≤3 km 或 ≤20 分。</p>
   </div>
 </details></div>
-  <div class="layout-slot slot-filters"><details class="panel controls-panel" id="filtersPanel" data-panel="filters" open>
+<div class="layout-slot slot-stats"><details class="panel scrubber" id="statsPanel" data-panel="stats" open>
+  <summary class="panel-sum">統計圖表 <span class="panel-hint">此刻類型 · 近距 vs 遠</span></summary>
+  <div class="panel-body">
+    <div class="stats">
+      <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi</div></div>
+      <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi</div></div>
+      <div class="stat roll"><div class="n" id="nRoll">0</div><div class="l">Rolling</div></div>
+      <div class="stat unk"><div class="n" id="nUnk">0</div><div class="l">未分類</div></div>
+      <div class="stat"><div class="n" id="nTotal">0</div><div class="l">總堂數</div></div>
+    </div>
+    <div class="compose" id="composeBar" aria-hidden="true"></div>
+    <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
+    <div class="chart-block">
+      <h4>此刻課型分布</h4>
+      <div class="bar-chart" id="chartTypes"></div>
+    </div>
+    <div class="chart-block">
+      <h4>近距對手 vs 其餘（進行中）</h4>
+      <div class="bar-chart" id="chartRival"></div>
+    </div>
+  </div>
+</details></div>
+<div class="layout-slot slot-filters"><details class="panel controls-panel" id="filtersPanel" data-panel="filters" open>
   <summary class="panel-sum">篩選與時間軸 <span class="panel-hint">星期 · 類型 · 此刻紅線</span></summary>
   <div class="panel-body">
 <div class="controls">
@@ -583,29 +598,7 @@
   </div>
   </div>
 </details></div>
-  <div class="layout-slot slot-stats"><details class="panel scrubber" id="statsPanel" data-panel="stats" open>
-  <summary class="panel-sum">統計圖表 <span class="panel-hint">此刻類型 · 近距 vs 遠</span></summary>
-  <div class="panel-body">
-    <div class="stats">
-      <div class="stat gi"><div class="n" id="nGi">0</div><div class="l">Gi</div></div>
-      <div class="stat nogi"><div class="n" id="nNogi">0</div><div class="l">No-Gi</div></div>
-      <div class="stat roll"><div class="n" id="nRoll">0</div><div class="l">Rolling</div></div>
-      <div class="stat unk"><div class="n" id="nUnk">0</div><div class="l">未分類</div></div>
-      <div class="stat"><div class="n" id="nTotal">0</div><div class="l">總堂數</div></div>
-    </div>
-    <div class="compose" id="composeBar" aria-hidden="true"></div>
-    <div class="compose-legend" id="composeLegend">Gi — · No-Gi — · Rolling — · 未分類 —</div>
-    <div class="chart-block">
-      <h4>此刻課型分布</h4>
-      <div class="bar-chart" id="chartTypes"></div>
-    </div>
-    <div class="chart-block">
-      <h4>近距對手 vs 其餘（進行中）</h4>
-      <div class="bar-chart" id="chartRival"></div>
-    </div>
-  </div>
-</details></div>
-  <div class="layout-slot slot-views"><details class="panel views-panel" id="viewsPanel" data-panel="views" open>
+<div class="layout-slot slot-views"><details class="panel views-panel" id="viewsPanel" data-panel="views" open>
   <summary class="panel-sum">課表檢視 <span class="panel-hint">矩陣 · 對齊 · 卡片 · 依星期</span></summary>
   <div class="panel-body">
 <main>
@@ -621,21 +614,20 @@
   <div id="dayView" style="display:none"></div>
 </main>
   </div>
-</details></div>  <div class="layout-slot slot-detail"><details class="panel detail-panel" id="detailPanel" data-panel="detail">
+</details></div>
+<div class="layout-slot slot-detail"><details class="panel detail-panel" id="detailPanel" data-panel="detail">
   <summary class="panel-sum">道館詳情 <span class="panel-hint">點課表列開啟</span></summary>
   <div class="panel-body">
   <div id="detail"></div>
   </div>
 </details></div>
-
-  <div class="layout-slot slot-map"><details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
+<div class="layout-slot slot-map"><details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
   <summary class="panel-sum">道館地圖 <span class="panel-hint">以 Taiwanogi 為中心</span></summary>
   <div class="panel-body">
   <p class="map-hint">暗色單色底圖。標記：紫★＝Taiwanogi · 紅＝鄰近對手（easy／≤3km／≤20分）· 灰＝其餘。篩選會同步地圖；點標記開課表。</p>
   <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
   </div>
 </details></div>
-
 </div>
 <footer>
   來源為各館官網／IG／FB 公開課表；時間軸統計依解析後的時段重疊計算，僅供參考。距離／捷運以 Taiwanogi 為基準估算，非即時導航。
@@ -1227,7 +1219,7 @@ function updateMap() {
 
 
 
-const LAYOUT_STORE = "bjj-layout-preset-v1";
+const LAYOUT_STORE = "bjj-layout-preset-v2";
 function applyLayout(name) {
   const el = document.getElementById("appLayout");
   if (!el) return;
@@ -1242,8 +1234,11 @@ function applyLayout(name) {
   if (typeof gymMap !== "undefined" && gymMap) setTimeout(() => gymMap.invalidateSize(), 120);
 }
 function initLayout() {
-  let layout = "stats-top";
-  try { layout = localStorage.getItem(LAYOUT_STORE) || layout; } catch (_) {}
+  let layout = "stats-top"; /* filters sit directly above 課表 */
+  try {
+    const saved = localStorage.getItem(LAYOUT_STORE);
+    if (saved === "stats-top" || saved === "stats-right" || saved === "stacked") layout = saved;
+  } catch (_) {}
   applyLayout(layout);
   document.querySelectorAll("#layoutBar [data-layout]").forEach(btn => {
     btn.onclick = () => applyLayout(btn.dataset.layout);
