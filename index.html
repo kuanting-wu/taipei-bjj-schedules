@@ -349,9 +349,10 @@
 
   .layout-bar {
     display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
-    padding: .65rem 1.5rem; border-bottom: 1px solid var(--border);
-    background: #121820;
+    padding: .75rem 1.5rem; border-bottom: 1px solid var(--border);
+    background: #1a2332; border-top: 1px solid var(--border);
   }
+  .layout-bar .chip { font-weight: 600; }
   .layout-bar .lb { font-size: .8rem; color: var(--muted); margin-right: .25rem; }
   .layout-bar .chip.on { outline-color: var(--accent); }
   #appLayout {
@@ -362,8 +363,8 @@
       "filters"
       "stats"
       "views"
-      "map"
-      "detail";
+      "detail"
+      "map";
   }
   #appLayout > .layout-slot { min-width: 0; }
   #appLayout .layout-slot > details.panel { margin-left: 1.5rem; margin-right: 1.5rem; }
@@ -374,8 +375,8 @@
       "filters"
       "stats"
       "views"
-      "map"
-      "detail";
+      "detail"
+      "map";
   }
   /* stats RIGHT */
   #appLayout.layout-stats-right {
@@ -384,8 +385,8 @@
       "about about"
       "filters stats"
       "views stats"
-      "map map"
-      "detail detail";
+      "detail detail"
+      "map map";
   }
   #appLayout.layout-stats-right .slot-stats > details.panel {
     position: sticky; top: .5rem; margin-left: .5rem; margin-right: 1.5rem;
@@ -400,8 +401,8 @@
       "filters"
       "stats"
       "views"
-      "map"
-      "detail";
+      "detail"
+      "map";
   }
   .slot-about { grid-area: about; }
   .slot-filters { grid-area: filters; }
@@ -448,7 +449,7 @@
     #appLayout.layout-stats-right {
       grid-template-columns: 1fr;
       grid-template-areas:
-        "about" "filters" "stats" "views" "map" "detail";
+        "about" "filters" "stats" "views" "detail" "map";
     }
     #appLayout.layout-stats-right .slot-stats > details.panel {
       position: static; margin-left: 1.5rem; margin-right: 1.5rem;
@@ -497,15 +498,15 @@
 <body>
 <header>
   <h1>大台北柔術課表 · 時間軸統計</h1>
-  <p>篩選內建時間軸（紅線＝此刻）· 課表在上、地圖在下 · 可切換統計版面 · 資料截至 2026-10-02</p>
+  <p>頂部可選「統計顯示位置」· 時間軸在篩選裡 · 地圖在最下方 · 資料截至 2026-10-02</p>
 </header>
 
 <div class="layout-bar" id="layoutBar">
-  <span class="lb">版面</span>
+  <span class="lb"><strong style="color:var(--text)">統計顯示位置</strong></span>
   <button type="button" class="chip on" data-layout="stats-top">統計在上</button>
   <button type="button" class="chip" data-layout="stats-right">統計在右</button>
-  <button type="button" class="chip" data-layout="stacked">堆疊</button>
-  <span class="lb" style="margin-left:.5rem">地圖在課表下方 · 無自由拖曳</span>
+  <button type="button" class="chip" data-layout="stacked">堆疊（直排）</button>
+  <span class="lb" style="margin-left:.5rem">地圖固定在整頁最下方</span>
 </div>
 
 <div id="appLayout" class="layout-stats-top">
@@ -618,7 +619,13 @@
   <div id="dayView" style="display:none"></div>
 </main>
   </div>
+</details></div>  <div class="layout-slot slot-detail"><details class="panel detail-panel" id="detailPanel" data-panel="detail">
+  <summary class="panel-sum">道館詳情 <span class="panel-hint">點課表列開啟</span></summary>
+  <div class="panel-body">
+  <div id="detail"></div>
+  </div>
 </details></div>
+
   <div class="layout-slot slot-map"><details class="panel map-section" id="mapSection" data-panel="map" open aria-label="道館地圖">
   <summary class="panel-sum">道館地圖 <span class="panel-hint">以 Taiwanogi 為中心</span></summary>
   <div class="panel-body">
@@ -626,12 +633,7 @@
   <div id="gymMap" role="img" aria-label="大台北柔術道館相對 Taiwanogi 位置圖"></div>
   </div>
 </details></div>
-  <div class="layout-slot slot-detail"><details class="panel detail-panel" id="detailPanel" data-panel="detail">
-  <summary class="panel-sum">道館詳情 <span class="panel-hint">點課表列開啟</span></summary>
-  <div class="panel-body">
-  <div id="detail"></div>
-  </div>
-</details></div>
+
 </div>
 <footer>
   來源為各館官網／IG／FB 公開課表；時間軸統計依解析後的時段重疊計算，僅供參考。距離／捷運以 Taiwanogi 為基準估算，非即時導航。
